@@ -1,0 +1,37 @@
+{% if messages %}
+<div class="messages">
+    {% for message in messages %}
+    <div class="alert {{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<script src="https://unpkg.com/htmx.org@1.9.2"></script>
+
+<h3>You have already rolled: {{ player.roll_count }} times</h3>
+
+<form hx-post="{% url 'roll_dice' game_code=game_code %}"
+      hx-target="#dice-results"
+      hx-swap="innerHTML">
+    <div>
+        <h4>Roll results:</h4>
+        {% for die in player.dice_result %}
+        <label>
+            <input type="checkbox" name="kept_dice" value="{{ die }}"
+                   {% if die in kept_dice %}checked{% endif %}>
+            {{ die }}
+        </label>
+        {% endfor %}
+    </div>
+
+    <button type="submit" {% if player.roll_count >= 3 %}disabled{% endif %}>
+        {% if player.roll_count == 0 %} Roll {% else %} Roll Again {% endif %}
+    </button>
+</form>
+
+<h4>Kept dice:</h4>
+<ul>
+    {% for dice in kept_dice %}
+    <li>{{ dice }}</li>
+    {% endfor %}
+</ul>

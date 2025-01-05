@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Join the game</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Join</button>
+    </form>
+
+    <h2>Gracze w grze:</h2>
+    <ul>
+        {% for player in game.players %}
+        <li>{{ player.nickname }} - {{ player.monster }}</li>
+        {% endfor %}
+    </ul>
+{% endblock content %}

@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block content %}
+    <button  id="create-new-game"><a href="{% url 'create_game' %}"> Create New Game</a></button>
+    <button  id="join-game"><a href="{% url 'join_game' %}"> Join The Game</a></button>
+{% endblock content %}

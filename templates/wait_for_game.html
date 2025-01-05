@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>Waiting for other players to join</h1>
+    <p> Hello {{ current_player.nickname }}</p>
+    <h2>Game code: {{ game_code }}</h2>
+    <h2>Other players:</h2>
+    <div id="players-list"
+         hx-get="{% url 'update_players' game_code=game_code %}"
+         hx-trigger="load, every 5s"
+         hx-swap="innerHTML">
+    </div>
+
+    <p>Once all players will join, the game creator can start the game, by pressing "Start"</p>
+
+    {% if current_player.id == players.0.id %}
+        <button  id="gameplay">
+            <a href="{% url 'gameplay' game_code=game_code %}">Start</a>
+        </button>
+    {% endif %}
+{% endblock content %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Me:</h2>
+<table>
+    <tr>
+        <td>Name</td>
+        <td>Monster</td>
+        <td>Health</td>
+        <td>Victory</td>
+        <td>Energy</td>
+    </tr>
+    <tr>
+        <td>{{ current_player.nickname }}</td>
+        <td>{{ current_player.monster }}</td>
+        <td>{{ current_player.health }}</td>
+        <td>{{ current_player.victory }}</td>
+        <td>{{ current_player.energy }}</td>
+    </tr>
+</table>
+
+<h2>Players:</h2>
+<table>
+    <tr>
+        <td>Name</td>
+        <td>Monster</td>
+        <td>Health</td>
+        <td>Victory</td>
+        <td>Energy</td>
+    </tr>
+    {% for player in players %}
+    <tr>
+        <td>{{ player.nickname }}</td>
+        <td>{{ player.monster }}</td>
+        <td>{{ player.health }}</td>
+        <td>{{ player.victory }}</td>
+        <td>{{ player.energy }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<div id="dice-results"
+     hx-post="{% url 'roll_dice' game_code=game_code %}"
+     hx-trigger="click"
+     hx-swap="innerHTML">
+    <button>Roll</button>
+</div>
+{% endblock content %}

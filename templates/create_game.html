@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>Create new game</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Join</button>
+    </form>
+    <h2>The Game Code will be generated once you join the game</h2>
+{% endblock content %}
