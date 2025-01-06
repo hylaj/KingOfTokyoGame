@@ -170,8 +170,10 @@ def wait_for_game(request, game_code):
     game = Games.get_game(game_code)
     if not game:
         messages.error(request, 'Given game code does not exist')
-       #form = JoinGameForm(request.POST or None)
-        return redirect(request, "create_form_join_game")
+        return redirect("home")
+
+    if game.status == "playing":
+        return redirect("gameplay", game_code=game_code)
 
     player_id = request.session.get("player_id")
     current_player = next((player for player in game.players if str(player.id) == player_id), None)
@@ -181,13 +183,6 @@ def wait_for_game(request, game_code):
         "game_code": game.game_code,
         "current_player": current_player
     })
-
-def update_players(request, game_code):
-    game = Games.get_game(game_code)
-    if not game:
-        messages.error(request, 'This game does not exist')
-
-    return render(request, "partials/players_list.html", {"players": game.players})
 
 def gameplay(request, game_code):
     game = Games.get_game(game_code)
@@ -200,12 +195,12 @@ def gameplay(request, game_code):
     player_id = request.session.get("player_id")
     current_player = next((player for player in game.players if str(player.id) == player_id), None)
 
-
     return render(request, 'gameplay.html',{
         "players": game.players,
         "game_code": game.game_code,
         "current_player": current_player
     })
+
 
 def roll_dice(request, game_code):
     game = Games.get_game(game_code)
@@ -244,4 +239,5 @@ def roll_dice(request, game_code):
         "dice_result": current_player.dice_result,
         "game_code": game.game_code
     })
+
 

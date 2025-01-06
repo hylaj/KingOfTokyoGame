@@ -10,9 +10,7 @@
 
 <h3>You have already rolled: {{ player.roll_count }} times</h3>
 
-<form hx-post="{% url 'roll_dice' game_code=game_code %}"
-      hx-target="#dice-results"
-      hx-swap="innerHTML">
+<form>
     <div>
         <h4>Roll results:</h4>
         {% for die in player.dice_result %}

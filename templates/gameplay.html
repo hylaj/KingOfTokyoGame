@@ -40,9 +40,8 @@
 </table>
 
 <div id="dice-results"
-     hx-post="{% url 'roll_dice' game_code=game_code %}"
-     hx-trigger="click"
-     hx-swap="innerHTML">
-    <button>Roll</button>
+     hx-swap="innerHTML"
+     hx-target= "#dice-results">
+    <button hx-post="{% url 'roll_dice' game_code=game_code %}" hx-trigger="click">Roll</button>
 </div>
 {% endblock content %}
