@@ -1,9 +1,12 @@
 import random
 import string
 from django.contrib import messages
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from uuid import uuid4
 from .forms import JoinGameForm, CreateGameForm
+from django.template.loader import render_to_string
+from django.http import HttpResponse
 
 class Games:
     active_games = {} #Przechowuje aktywne gry
@@ -171,7 +174,6 @@ def wait_for_game(request, game_code):
     if not game:
         messages.error(request, 'Given game code does not exist')
         return redirect("home")
-
     if game.status == "playing":
         return redirect("gameplay", game_code=game_code)
 
@@ -186,11 +188,18 @@ def wait_for_game(request, game_code):
 
 def gameplay(request, game_code):
     game = Games.get_game(game_code)
-    if len(game.players) >= 2:
-        game.start_game()
-    else:
-        messages.error(request, "Too few players.")
-        return redirect("wait_for_game", game_code=game_code)
+
+    if not game:
+        messages.error(request, "Game not found")
+        return redirect("home")
+
+    if game.status != 'playing':
+        if game.status == 'waiting':
+            messages.error(request, "This game has not started yet")
+            return redirect("wait_for_game", game_code=game_code)
+        elif game.status == 'finished':
+            messages.error(request, "This game is finished")
+            return redirect("home")
 
     player_id = request.session.get("player_id")
     current_player = next((player for player in game.players if str(player.id) == player_id), None)
@@ -201,6 +210,19 @@ def gameplay(request, game_code):
         "current_player": current_player
     })
 
+def start_game(request, game_code):
+    game = Games.get_game(game_code)
+    player_id = request.session.get("player_id")
+
+    if not game:
+        messages.error(request, "Game not found")
+        return redirect("home")
+    if len(game.players) < 2: #Musi być minimum 2 graczy, aby rozpocząć rozgrywkę
+        messages.error(request, "Too few players.")
+        return redirect("wait_for_game", game_code=game_code)
+    if str(game.players[0].id) == player_id:  # Tylko twórca gry może ją rozpocząć
+        game.start_game()
+        redirect('gameplay', game_code=game_code)
 
 def roll_dice(request, game_code):
     game = Games.get_game(game_code)
@@ -240,4 +262,19 @@ def roll_dice(request, game_code):
         "game_code": game.game_code
     })
 
+def check_game_status(request, game_code):
+    game = Games.get_game(game_code)
+    if not game:
+        messages.error(request, "Game not found")
+        return redirect("home")
+    return JsonResponse({"status": game.status})
 
+
+def get_players(request, game_code):
+    game = Games.get_game(game_code)
+    if not game:
+        messages.error(request, "Game not found")
+        return redirect("home")
+
+    players_html = render_to_string("partials/players_list.html", {"players": game.players})
+    return HttpResponse(players_html)

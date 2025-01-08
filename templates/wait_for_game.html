@@ -4,26 +4,37 @@
     <p> Hello {{ current_player.nickname }}</p>
     <h2>Game code: {{ game_code }}</h2>
     <h2>Other players:</h2>
-    <div>
+<div id="players-list" hx-get="{% url 'get_players' game_code=game_code %}" hx-trigger="load, every 3s" hx-swap="innerHTML">
     <ul>
         {% for player in players %}
-        <li>{{ player.nickname }} - {{ player.monster }}</li>
+            <li>{{ player.nickname }} - {{ player.monster }}</li>
         {% endfor %}
     </ul>
-    </div>
+</div>
     <p>Once all players will join, the game creator can start the game, by pressing "Start"</p>
 
-    {% if current_player.id == players.0.id %}
-        <button  id="gameplay">
-            <a href="{% url 'gameplay' game_code=game_code %}">Start</a>
+ {% if current_player.id == players.0.id %}
+        <button
+            hx-post="{% url 'start_game' game_code=game_code %}"
+            hx-trigger="click"
+            hx-swap="none">
+            Start
         </button>
     {% endif %}
 
-     <script>
-        setTimeout(() => {
-            window.location.reload(); //serwer przy każdym żądaniu sprawdza status gry. Jeśli status zmienił się na playing, widok wait_for_game automatycznie przekierowuje gracza do widoku gameplay
-        }, 3000); // Odświeżanie co 3 sekundy
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const checkGameStatus = function() {
+                fetch("{% url 'check_game_status' game_code=game_code %}")
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === "playing") {
+                            window.location.href = "{% url 'gameplay' game_code=game_code %}";
+                        }
+                    });
+            };
+
+            setInterval(checkGameStatus, 3000);  // Sprawdzanie statusu co 3 sekundy
+        });
     </script>
-
-
-{% endblock content %}
+{% endblock %}
