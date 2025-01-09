@@ -42,20 +42,29 @@
 
 
 <form method="POST">
-        {% csrf_token %}
-        <h2>Roll dice:</h2>
-        <div>
+    {% csrf_token %}
+    <h2>Roll dice:</h2>
+    <div>
         {% for die in dice %}
             <label>
-                <input type="checkbox" name="kept_dice" value="{{ die }}">({{ die }})
+                <input type="checkbox" name="kept_dice" value="{{ die }}"
+                       {% if viewing_player.id != current_player.id %}disabled{% endif %}>({{ die }})
             </label><br>
         {% endfor %}
-        </div>
-        <button type="submit" name="roll_dice_btn">
-            Roll dice
-        </button>
-        <button type="submit" name="save_dice_btn">Save</button>
+    </div>
+    <button type="submit" name="roll_dice_btn"
+            {% if viewing_player.id != current_player.id %}disabled{% endif %}>
+        Roll dice
+    </button>
+    <button type="submit" name="save_dice_btn"
+            {% if viewing_player.id != current_player.id %}disabled{% endif %}>
+        Save
+    </button>
 </form>
 
 
+<h2>Kept dice:</h2>
+        {% for die in selected_dice %}
+            ({{ die }})
+        {% endfor %}
 {% endblock %}

@@ -33,6 +33,7 @@ class Game:
         self.status = 'waiting'
         self.current_turn = 0
         self.players = []
+        self.tokyo_player = None
 
     def add_player(self, player):
         if len(self.players) < 6:
@@ -83,7 +84,7 @@ class Player:
         self.health = self.MAX_HEALTH
         self.victory = 0
         self.energy = 0
-        self.in_tokyo = False
+        self.in_tokyo = 0
         self.is_active = True
         self.dice_result = []
         self.kept_dice = []
@@ -269,6 +270,7 @@ def gameplay(request, game_code):
         "players": game.players,
         "game_code": game.game_code,
         "viewing_player": viewing_player,
+        "current_player": current_player,
         'dice': current_player.dice_result,
         'selected_dice': current_player.kept_dice,
     })
