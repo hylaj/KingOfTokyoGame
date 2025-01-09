@@ -46,18 +46,9 @@
     <h2>Roll dice:</h2>
     <div>
         {% for die in dice %}
-            <label>
-                <input type="checkbox" name="kept_dice" value="{{ die }}">
-                       ({{ die }})
-            </label><br>
+            ({{ die }})
         {% endfor %}
     </div>
-    <button type="submit" name="roll_dice_btn">
-        Roll dice
-    </button>
-    <button type="submit" name="save_dice_btn">
-        Save
-    </button>
 </form>
 
 
@@ -69,17 +60,17 @@
 
 
     <script>
-        {#document.addEventListener("DOMContentLoaded", function() {#}
-        {#    const checkCurrentPlayer = function() {#}
-        {#        fetch("{% url 'check_current_player' game_code=game_code %}")#}
-        {#            .then(response => response.json())#}
-        {#            .then(data => {#}
-        {#                if (data.currentPlayer !== data.viewingPlayer) {#}
-        {#                    window.location.href = "{% url 'gameplay_view' game_code=game_code %}";#}
-        {#                }#}
-        {#            });#}
-        {#    };#}
-        {##}
-        {#    setInterval(checkCurrentPlayer, 3000);  // Sprawdzanie statusu co 3 sekundy#}
-        {#);#}
+        document.addEventListener("DOMContentLoaded", function() {
+            const checkCurrentPlayer = function() {
+                fetch("{% url 'check_current_player' game_code=game_code %}")
+                    .then(response => response.json())
+                    .then(data => {
+                        {#if (data.currentPlayer === data.viewingPlayer) {#}
+                        {#    window.location.href = "{% url 'gameplay' game_code=game_code %}";#}
+                        {#}#}
+                    });
+            };
+
+            setInterval(checkCurrentPlayer, 3000);  // Sprawdzanie statusu co 3 sekundy
+        });
     </script>

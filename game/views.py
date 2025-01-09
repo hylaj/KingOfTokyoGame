@@ -227,11 +227,12 @@ def start_game(request, game_code):
         return redirect("wait_for_game", game_code=game_code)
     if str(game.players[0].id) == player_id:  # Tylko twórca gry może ją rozpocząć
         game.start_game()
-        redirect('gameplay', game_code=game_code)
+        return redirect('gameplay', game_code=game_code)
 
 
 def gameplay(request, game_code):
     game = Games.get_game(game_code)
+
 
     if not game:
         messages.error(request, "Game not found")
@@ -249,12 +250,14 @@ def gameplay(request, game_code):
     viewing_player = next((player for player in game.players if str(player.id) == viewing_player_id), None)
     current_player = game.get_current_player()
 
+    if str(viewing_player_id) != str(current_player.id):
+        redirect('gameplay_view', game_code=game_code)
+
+    if str(current_player.id) != str(viewing_player_id):
+        messages.error(request, "Not your turn")
+        redirect("gameplay", game_code=game_code)
+
     if request.method == 'POST':
-
-        if str(current_player.id) != str(viewing_player_id):
-            messages.error(request, "Not your turn")
-            redirect("gameplay", game_code=game_code)
-
         if 'roll_dice_btn' in request.POST:
             current_player.roll_player_dice()
 
@@ -262,9 +265,10 @@ def gameplay(request, game_code):
             selected_dice = request.POST.getlist("kept_dice", [])
             current_player.kept_dice.extend(selected_dice)
 
-
     if current_player.roll_count == 3:
         game.next_turn()
+
+    current_player = game.get_current_player()
 
     return render(request, 'gameplay.html',{
         "players": game.players,
@@ -274,6 +278,45 @@ def gameplay(request, game_code):
         'dice': current_player.dice_result,
         'selected_dice': current_player.kept_dice,
     })
+
+def gameplay_view(request, game_code):
+    game = Games.get_game(game_code)
+
+    if not game:
+        messages.error(request, "Game not found")
+        return redirect("home")
+
+    viewing_player_id = request.session.get("player_id")
+    viewing_player = next((player for player in game.players if str(player.id) == viewing_player_id), None)
+    current_player = game.get_current_player()
+
+    return render(request, 'gameplay_view.html',{
+        "players": game.players,
+        "game_code": game.game_code,
+        "viewing_player": viewing_player,
+        "current_player": current_player,
+        'dice': current_player.dice_result,
+        'selected_dice': current_player.kept_dice,
+    })
+
+def check_current_player(request, game_code):
+    game = Games.get_game(game_code)
+    if not game:
+        messages.error(request, "Game not found")
+        return redirect("home")
+
+    current_player = game.get_current_player()
+    current_player_id = str(current_player.id)
+    viewing_player_id = str(request.session.get("player_id"))
+
+    return JsonResponse({
+        "currentPlayer": current_player_id,
+        "viewingPlayer": viewing_player_id,
+    })
+
+
+
+
 
 def roll_dice_view(request, game_code):
     game = Games.get_game(game_code)
@@ -290,7 +333,6 @@ def roll_dice_view(request, game_code):
 
     if current_player.roll_count == 3:
         game.next_turn()
-
 
 
     return redirect('gameplay', game_code=game_code)

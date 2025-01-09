@@ -12,5 +12,6 @@ urlpatterns = [
     path("get_players/<str:game_code>/", views.get_players, name="get_players"),
     path("start_game/<str:game_code>/", views.start_game, name="start_game"),
     path('roll-dice/<str:game_code>/', views.roll_dice_view, name='roll_dice'),
-
+    path("check_current_player/<str:game_code>/", views.check_current_player, name="check_current_player"),
+    path('gameplay_view/<str:game_code>/', views.gameplay_view, name='gameplay_view'),
 ]
