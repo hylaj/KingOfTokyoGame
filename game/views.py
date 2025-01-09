@@ -70,6 +70,8 @@ class Game:
         return [random.choice(symbols) for _ in range(num_dice)]
 
 
+
+
 class Player:
     MAX_HEALTH = 10
     MAX_VICTORY = 20
@@ -83,6 +85,7 @@ class Player:
         self.energy = 0
         self.in_tokyo = False
         self.is_active = True
+        self.dice_result = []
         self.kept_dice = []
         self.roll_count = 0
 
@@ -104,6 +107,12 @@ class Player:
     def gain_energy(self, amount):
         self.energy += amount
 
+    def roll_player_dice(self):
+        self.dice_result = []
+        num_dice_to_roll = 6 - len(self.kept_dice)
+        result = Game.roll_dice(num_dice_to_roll)
+        self.dice_result += result
+        self.roll_count += 1
 
 class Monster:
     def __init__(self, id, name, image):
@@ -114,6 +123,29 @@ class Monster:
 def home(request):
     return render(request, 'home.html')
 
+
+def create_new_game(request):
+    form = CreateGameForm(request.POST or None)
+    if request.method == "POST":
+        if form.is_valid():
+            nickname = form.cleaned_data["nickname"]
+            monster_name = form.cleaned_data["monster"]
+
+            # Tworzenie nowej gry
+            game = Games.create_game()
+            request.session["game_code"] = game.game_code
+
+            # Dodanie gracza jako pierwszego uczestnika
+            new_player = Player(nickname, monster_name)
+            game.add_player(new_player)
+            request.session["player_id"] = str(new_player.id)
+
+            return redirect("wait_for_game", game_code=game.game_code)
+        else:
+            messages.error(request, "Invalid form data. Please check your input.")
+
+    # Renderowanie strony w przypadku GET lub błędu w formularzu
+    return render(request, "create_game.html", {"form": form})
 
 # Funkcja do obsługi formularza dołączania do gry
 def create_form_join_game(request):
@@ -145,28 +177,6 @@ def create_form_join_game(request):
     return render(request, "join_game.html", {"form": form})
 
 
-def create_new_game(request):
-    form = CreateGameForm(request.POST or None)
-    if request.method == "POST":
-        if form.is_valid():
-            nickname = form.cleaned_data["nickname"]
-            monster_name = form.cleaned_data["monster"]
-
-            # Tworzenie nowej gry
-            game = Games.create_game()
-            request.session["game_code"] = game.game_code
-
-            # Dodanie gracza jako pierwszego uczestnika
-            new_player = Player(nickname, monster_name)
-            game.add_player(new_player)
-            request.session["player_id"] = str(new_player.id)
-
-            return redirect("wait_for_game", game_code=game.game_code)
-        else:
-            messages.error(request, "Invalid form data. Please check your input.")
-
-    # Renderowanie strony w przypadku GET lub błędu w formularzu
-    return render(request, "create_game.html", {"form": form})
 
 
 def wait_for_game(request, game_code):
@@ -186,82 +196,6 @@ def wait_for_game(request, game_code):
         "current_player": current_player
     })
 
-def gameplay(request, game_code):
-    game = Games.get_game(game_code)
-
-    if not game:
-        messages.error(request, "Game not found")
-        return redirect("home")
-
-    if game.status != 'playing':
-        if game.status == 'waiting':
-            messages.error(request, "This game has not started yet")
-            return redirect("wait_for_game", game_code=game_code)
-        elif game.status == 'finished':
-            messages.error(request, "This game is finished")
-            return redirect("home")
-
-    player_id = request.session.get("player_id")
-    current_player = next((player for player in game.players if str(player.id) == player_id), None)
-
-    return render(request, 'gameplay.html',{
-        "players": game.players,
-        "game_code": game.game_code,
-        "current_player": current_player
-    })
-
-def start_game(request, game_code):
-    game = Games.get_game(game_code)
-    player_id = request.session.get("player_id")
-
-    if not game:
-        messages.error(request, "Game not found")
-        return redirect("home")
-    if len(game.players) < 2: #Musi być minimum 2 graczy, aby rozpocząć rozgrywkę
-        messages.error(request, "Too few players.")
-        return redirect("wait_for_game", game_code=game_code)
-    if str(game.players[0].id) == player_id:  # Tylko twórca gry może ją rozpocząć
-        game.start_game()
-        redirect('gameplay', game_code=game_code)
-
-def roll_dice(request, game_code):
-    game = Games.get_game(game_code)
-    if not game:
-        messages.error(request, "Game not found")
-        return redirect("home")
-
-    session_player_id = request.session.get("player_id")
-    current_player = game.get_current_player()
-
-    if str(current_player.id) != session_player_id:
-        messages.error(request, "Not your turn")
-        return render(request, "partials/roll_dice.html", {"game_code": game.game_code})
-
-    kept_dice = request.POST.getlist("kept_dice", [])
-    if kept_dice:
-        current_player.kept_dice.append(kept_dice)
-
-    if current_player.roll_count >= 3:
-        messages.info(request, "You have already rolled 3 times")
-        game.next_turn()
-        return render(request, "partials/roll_dice.html", {"game_code": game.game_code})
-
-    num_dice_to_roll = 6 - len(current_player.kept_dice)
-    current_player.dice_result = Game.roll_dice(num_dice=num_dice_to_roll)
-    current_player.roll_count += 1
-
-    if current_player.roll_count == 3:
-        game.next_turn()
-
-    request.session["dice_result"] = current_player.dice_result
-
-    return render(request, 'partials/roll_dice.html', {
-        "player": current_player,
-        "kept_dice": current_player.kept_dice,
-        "dice_result": current_player.dice_result,
-        "game_code": game.game_code
-    })
-
 def check_game_status(request, game_code):
     game = Games.get_game(game_code)
     if not game:
@@ -278,3 +212,84 @@ def get_players(request, game_code):
 
     players_html = render_to_string("partials/players_list.html", {"players": game.players})
     return HttpResponse(players_html)
+
+
+def start_game(request, game_code):
+    game = Games.get_game(game_code)
+    player_id = request.session.get("player_id")
+
+    if not game:
+        messages.error(request, "Game not found")
+        return redirect("home")
+    if len(game.players) < 2: #Musi być minimum 2 graczy, aby rozpocząć rozgrywkę
+        messages.error(request, "Too few players.")
+        return redirect("wait_for_game", game_code=game_code)
+    if str(game.players[0].id) == player_id:  # Tylko twórca gry może ją rozpocząć
+        game.start_game()
+        redirect('gameplay', game_code=game_code)
+
+
+def gameplay(request, game_code):
+    game = Games.get_game(game_code)
+
+    if not game:
+        messages.error(request, "Game not found")
+        return redirect("home")
+
+    if game.status != 'playing':
+        if game.status == 'waiting':
+            messages.error(request, "This game has not started yet")
+            return redirect("wait_for_game", game_code=game_code)
+        elif game.status == 'finished':
+            messages.error(request, "This game is finished")
+            return redirect("home")
+
+    viewing_player_id = request.session.get("player_id")
+    viewing_player = next((player for player in game.players if str(player.id) == viewing_player_id), None)
+    current_player = game.get_current_player()
+
+    if request.method == 'POST':
+
+        if str(current_player.id) != str(viewing_player_id):
+            messages.error(request, "Not your turn")
+            redirect("gameplay", game_code=game_code)
+
+        if 'roll_dice_btn' in request.POST:
+            current_player.roll_player_dice()
+
+        if 'save_dice_btn' in request.POST:
+            selected_dice = request.POST.getlist("kept_dice", [])
+            current_player.kept_dice.extend(selected_dice)
+
+
+    if current_player.roll_count == 3:
+        game.next_turn()
+
+    return render(request, 'gameplay.html',{
+        "players": game.players,
+        "game_code": game.game_code,
+        "viewing_player": viewing_player,
+        'dice': current_player.dice_result,
+        'selected_dice': current_player.kept_dice,
+    })
+
+def roll_dice_view(request, game_code):
+    game = Games.get_game(game_code)
+    if not game:
+        messages.error(request, "Game not found")
+        return redirect("home")
+
+    session_player_id = request.session.get("player_id")
+    current_player = game.get_current_player()
+
+    if str(current_player.id) != session_player_id:
+        messages.error(request, "Not your turn")
+        redirect("gameplay", game_code=game_code)
+
+    if current_player.roll_count == 3:
+        game.next_turn()
+
+
+
+    return redirect('gameplay', game_code=game_code)
+

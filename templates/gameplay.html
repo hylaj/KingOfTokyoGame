@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
+
 <h2>Me:</h2>
 <table>
     <tr>
@@ -11,11 +12,11 @@
         <td>Energy</td>
     </tr>
     <tr>
-        <td>{{ current_player.nickname }}</td>
-        <td>{{ current_player.monster }}</td>
-        <td>{{ current_player.health }}</td>
-        <td>{{ current_player.victory }}</td>
-        <td>{{ current_player.energy }}</td>
+        <td>{{ viewing_player.nickname }}</td>
+        <td>{{ viewing_player.monster }}</td>
+        <td>{{ viewing_player.health }}</td>
+        <td>{{ viewing_player.victory }}</td>
+        <td>{{ viewing_player.energy }}</td>
     </tr>
 </table>
 
@@ -39,9 +40,22 @@
     {% endfor %}
 </table>
 
-<div id="dice-results"
-     hx-swap="innerHTML"
-     hx-target= "#dice-results">
-    <button hx-post="{% url 'roll_dice' game_code=game_code %}" hx-trigger="click">Roll</button>
-</div>
-{% endblock content %}
+
+<form method="POST">
+        {% csrf_token %}
+        <h2>Roll dice:</h2>
+        <div>
+        {% for die in dice %}
+            <label>
+                <input type="checkbox" name="kept_dice" value="{{ die }}">({{ die }})
+            </label><br>
+        {% endfor %}
+        </div>
+        <button type="submit" name="roll_dice_btn">
+            Roll dice
+        </button>
+        <button type="submit" name="save_dice_btn">Save</button>
+</form>
+
+
+{% endblock %}
