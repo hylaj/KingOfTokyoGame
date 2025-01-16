@@ -14,14 +14,8 @@
     <p>Once all players will join, the game creator can start the game, by pressing "Start"</p>
 
  {% if current_player.id == players.0.id %}
-     <a href="{% url 'start_game' game_code=game_code %}">Start</a>
-        <button
-            hx-post="{% url 'start_game' game_code=game_code %}"
-            hx-trigger="click"
-            hx-swap="none">
-            Start
-        </button>
-    {% endif %}
+     <button><a href="{% url 'start_game' game_code=game_code %}">Start</a></button>
+ {% endif %}
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {

@@ -5,11 +5,11 @@
 <h2>Me:</h2>
 <table>
     <tr>
-        <td>Name</td>
-        <td>Monster</td>
-        <td>Health</td>
-        <td>Victory</td>
-        <td>Energy</td>
+        <th>Name</th>
+        <th>Monster</th>
+        <th>Health</th>
+        <th>Victory</th>
+        <th>Energy</th>
     </tr>
     <tr>
         <td>{{ viewing_player.nickname }}</td>
@@ -23,11 +23,11 @@
 <h2>Players:</h2>
 <table>
     <tr>
-        <td>Name</td>
-        <td>Monster</td>
-        <td>Health</td>
-        <td>Victory</td>
-        <td>Energy</td>
+        <th>Name</th>
+        <th>Monster</th>
+        <th>Health</th>
+        <th>Victory</th>
+        <th>Energy</th>
     </tr>
     {% for player in players %}
     <tr>
@@ -40,46 +40,80 @@
     {% endfor %}
 </table>
 
+<h2>Tokyo</h2>
+<p id="tokyo-player" hx-get="{% url 'get_tokyo_player' game_code=game_code %}" hx-trigger="load, every 1s" hx-swap="innerHTML">
+    {{ game.tokyo_player.nickname }}
+</p>
 
 <form method="POST">
     {% csrf_token %}
     <h2>Roll dice:</h2>
     <div>
         {% for die in dice %}
-            <label>
-                <input type="checkbox" name="kept_dice" value="{{ die }}">
-                       ({{ die }})
-            </label><br>
+        <label>
+            <input type="checkbox"
+                   name="kept_dice"
+                   value="{{ die }}"
+                   {% if show_roll == True or current_player.roll_count == 3 %}disabled{% endif %}>
+                   ({{ die }})
+        </label><br>
         {% endfor %}
     </div>
-    <button type="submit" name="roll_dice_btn">
+    {% if show_roll %}
+    <button type="submit"
+            name="roll_dice_btn"
+            {% if current_player.kept_dice|length == 6 or current_player.roll_count == 3 %}
+            disabled
+            {% endif %}>
         Roll dice
     </button>
-    <button type="submit" name="save_dice_btn">
+    {% else %}
+    <button type="submit"
+            name="save_dice_btn"
+            {% if current_player.kept_dice|length == 6 or current_player.roll_count == 3 %}
+            disabled
+            {% endif %}>
         Save
     </button>
+    {% endif %}
 </form>
 
+{% if viewing_player.was_attacked and viewing_player.roll_count == 0 %}
+<button>
+    <a href="{% url 'leave_tokyo' game_code=game_code %}">Leave Tokyo</a>
+</button>
+{% endif %}
+
+<button>
+    <a href="{% url 'end_turn' game_code=game_code %}">End turn</a>
+</button>
 
 <h2>Kept dice:</h2>
-        {% for die in selected_dice %}
-            ({{ die }})
-        {% endfor %}
+<p>
+    {% for die in selected_dice %}
+    ({{ die }})
+    {% endfor %}
+</p>
+
+
+
+<script>
+
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const checkCurrentPlayer = function() {
+            fetch("{% url 'check_current_player' game_code=game_code %}")
+                .then(response => response.json())
+                .then(data => {
+                    if (data.currentPlayer !== data.viewingPlayer) {
+                        window.location.href = "{% url 'gameplay_view' game_code=game_code %}";
+                    }
+                });
+        };
+
+        setInterval(checkCurrentPlayer, 3000);  // Check the status every 3 seconds
+    });
+
+</script>
+
 {% endblock %}
-
-
-    <script>
-        {#document.addEventListener("DOMContentLoaded", function() {#}
-        {#    const checkCurrentPlayer = function() {#}
-        {#        fetch("{% url 'check_current_player' game_code=game_code %}")#}
-        {#            .then(response => response.json())#}
-        {#            .then(data => {#}
-        {#                if (data.currentPlayer !== data.viewingPlayer) {#}
-        {#                    window.location.href = "{% url 'gameplay_view' game_code=game_code %}";#}
-        {#                }#}
-        {#            });#}
-        {#    };#}
-        {##}
-        {#    setInterval(checkCurrentPlayer, 3000);  // Sprawdzanie statusu co 3 sekundy#}
-        {#);#}
-    </script>

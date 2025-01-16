@@ -1,8 +1,3 @@
-{% extends "base.html" %}
-
-{% block content %}
-<div id="players-list" hx-get="{% url 'get_gameplay_data' game_code=game_code %}" hx-trigger="load, every 1s" hx-swap="innerHTML">
-
 <h2>Me:</h2>
 <table>
     <tr>
@@ -44,14 +39,15 @@
 <h2>Tokyo</h2>
 <p>{{ game.tokyo_player.nickname }}</p>
 
-
+<form method="POST">
+    {% csrf_token %}
     <h2>Roll dice:</h2>
     <div>
         {% for die in dice %}
         <span>({{ die }})</span>
         {% endfor %}
     </div>
-
+</form>
 
 {% if viewing_player.was_attacked %}
 <button>
@@ -65,22 +61,3 @@
     ({{ die }})
     {% endfor %}
 </p>
-</div>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const checkCurrentPlayer = function() {
-            fetch("{% url 'check_current_player' game_code=game_code %}")
-                .then(response => response.json())
-                .then(data => {
-                    if (data.currentPlayer === data.viewingPlayer) {
-                        window.location.href = "{% url 'gameplay' game_code=game_code %}";
-                    }
-                });
-        };
-
-        setInterval(checkCurrentPlayer, 1000);  // Sprawdzanie statusu co sekundę
-    });
-</script>
-
-{% endblock %}
