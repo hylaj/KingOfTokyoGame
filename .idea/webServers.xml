@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="c28a03c4-539e-4682-a916-0fb3ad3fd65c" name="wierzba.wzks.uj.edu.pl">
+        <fileTransfer rootFolder="/home/epi/22_hyla/game" accessType="SFTP" host="wierzba.wzks.uj.edu.pl" port="22" sshConfigId="868766de-cc22-4b94-a8d2-c20071282483" sshConfig="22_hyla@wierzba.wzks.uj.edu.pl:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

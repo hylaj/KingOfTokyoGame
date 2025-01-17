@@ -13,7 +13,7 @@
     </tr>
     <tr>
         <td>{{ viewing_player.nickname }}</td>
-        <td>{{ viewing_player.monster }}</td>
+        <td>{{ viewing_player.monster.name }}</td>
         <td>{{ viewing_player.health }}</td>
         <td>{{ viewing_player.victory }}</td>
         <td>{{ viewing_player.energy }}</td>
@@ -32,7 +32,7 @@
     {% for player in players %}
     <tr>
         <td>{{ player.nickname }}</td>
-        <td>{{ player.monster }}</td>
+        <td>{{ player.monster.name }}</td>
         <td>{{ player.health }}</td>
         <td>{{ player.victory }}</td>
         <td>{{ player.energy }}</td>

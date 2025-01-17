@@ -11,7 +11,7 @@
     <h2>Gracze w grze:</h2>
     <ul>
         {% for player in game.players %}
-        <li>{{ player.nickname }} - {{ player.monster }}</li>
+        <li>{{ player.nickname }} - {{ player.monster.name }}</li>
         {% endfor %}
     </ul>
 {% endblock content %}
