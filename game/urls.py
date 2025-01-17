@@ -18,5 +18,6 @@ urlpatterns = [
     path('check_current_player/<str:game_code>/', views.check_current_player, name='check_current_player'),
     path('gameplay_view/<str:game_code>/', views.gameplay_view, name='gameplay_view'),
     path('end_turn/<str:game_code>/', views.end_turn, name='end_turn'),
+    path('end_game/', views.end_game, name='end_game'),
     path('leave_tokyo/<str:game_code>/', views.leave_tokyo, name='leave_tokyo'),
 ]

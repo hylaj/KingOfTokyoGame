@@ -69,6 +69,16 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+        const checkGameEnd = function() {
+            fetch("{% url 'check_game_status' game_code=game_code %}")
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "finished") {
+                        window.location.href = "{% url 'end_game' %}";
+                    }
+                });
+        };
+
         const checkCurrentPlayer = function() {
             fetch("{% url 'check_current_player' game_code=game_code %}")
                 .then(response => response.json())
@@ -79,7 +89,10 @@
                 });
         };
 
-        setInterval(checkCurrentPlayer, 1000);  // Sprawdzanie statusu co sekundę
+        setInterval(() => {
+            checkGameEnd();
+            checkCurrentPlayer();
+        }, 1000);  // Sprawdzanie stanu gry co sekundę
     });
 </script>
 

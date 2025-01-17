@@ -1,9 +1,6 @@
-import random
-import string
 from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
-from uuid import uuid4
 from .forms import JoinGameForm, CreateGameForm
 from django.template.loader import render_to_string
 from django.http import HttpResponse
@@ -40,7 +37,6 @@ def create_new_game(request):
         else:
             messages.error(request, "Invalid form data. Please check your input.")
 
-    # Renderowanie strony w przypadku GET lub błędu w formularzu
     return render(request, "create_game.html", {"form": form})
 
 # Funkcja do obsługi formularza dołączania do gry
@@ -207,6 +203,9 @@ def gameplay(request, game_code):
     if len(current_player.kept_dice) == 6:
         current_player.save_results(game)
 
+    if game.check_end_game():
+        return redirect("end_game")
+
     return render(request, 'gameplay.html',{
         "players": game.players,
         "game_code": game.game_code,
@@ -220,6 +219,9 @@ def gameplay(request, game_code):
 
 def gameplay_view(request, game_code):
     game = Games.get_game(game_code)
+
+    if game.status == 'finished':
+        return redirect("end_game")
 
     if not game:
         messages.error(request, "Game not found")
@@ -321,6 +323,10 @@ def end_turn(request, game_code):
     current_player = game.get_current_player()
     if len(current_player.kept_dice) == 6:
         game.next_turn()
+
+        if game.check_end_game():
+            return redirect("end_game")
+
         return redirect('gameplay_view', game_code=game_code)
     else:
         messages.info(request, "Roll the dice to complete your turn.")
@@ -330,8 +336,20 @@ def end_turn(request, game_code):
 def end_game(request):
     game_code=request.session.get("game_code")
     game = Games.get_game(game_code)
+    if not game:
+        messages.error(request, "Game not found")
+        return redirect("home")
+
     game.status = 'finished'
-    Games.delete_game(game.game_code)
+
+    return render(request, "end_game.html", {
+        "game": game,
+    })
+
+
+
+
+
 
 
 

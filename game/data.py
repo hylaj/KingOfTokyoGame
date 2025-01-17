@@ -2,23 +2,10 @@ import random
 import string
 from uuid import uuid4
 
-class Monster:
-    def __init__(self, name, image):
-        self.name = name
-        self.image = image
-
-# Stała lista potworów
-MONSTERS = {
-    "gigazaur": Monster(name="Gigazaur", image="static/images/gigazaur.jpg"),
-    "mekadragon": Monster(name="Meka Dragon", image="static/images/mekadragon.jpg"),
-    "thekraken": Monster(name="The Kraken", image="static/images/thekraken.jpg"),
-    "cyberbunny": Monster(name="Cyber Bunny", image="static/images/cyberbunny.jpg"),
-    "alienoid": Monster(name="Alienoid", image="static/images/alienoid.jpg"),
-    "spacepenguin": Monster(name="Space Penguin", image="static/images/spacepenguin.jpg"),
-}
-
 class Games:
     active_games = {} #Przechowuje aktywne gry
+    finished_games = {}
+
 
     @classmethod
     def create_game(cls):
@@ -30,11 +17,6 @@ class Games:
     def get_game(cls, game_code):
         return cls.active_games.get(game_code)
 
-    @classmethod
-    def delete_game(cls, game_code):
-        if game_code in cls.active_games:
-            del cls.active_games[game_code]
-
 class Game:
     def __init__(self):
         self.id = uuid4()
@@ -45,6 +27,7 @@ class Game:
         self.tokyo_player = None
         self.show_roll = True
         self.attacking_player = None
+        self.winner =  None
 
     def add_player(self, player):
         if len(self.players) < 6:
@@ -83,11 +66,27 @@ class Game:
     def get_current_player(self):
         return self.players[self.current_turn]
 
+    def check_end_game(self):
+        # Sprawdź, czy któryś gracz zdobył 20 punktów zwycięstwa
+        winner = next((player for player in self.players if player.victory >= 20), None)
+        if winner:
+            self.status = 'finished'
+            self.winner = winner  # Przechowujemy zwycięzcę
+            return True
+
+        # Sprawdź, czy został tylko jeden aktywny gracz
+        active_players = [player for player in self.players if player.is_active]
+        if len(active_players) == 1:
+            self.status = 'finished'
+            self.winner = active_players[0]
+            return True
+
+        return False
+
     @staticmethod
     def roll_dice(num_dice=6):
         symbols = ["1", "2", "3", "heart", "attack", "energy"]
         return [random.choice(symbols) for _ in range(num_dice)]
-
 
 
 
@@ -100,7 +99,7 @@ class Player:
         self.nickname = nickname
         self.monster = monster
         self.health = self.MAX_HEALTH
-        self.victory = 0
+        self.victory = 15
         self.energy = 0
         self.in_tokyo = False
         self.is_active = True
@@ -135,8 +134,6 @@ class Player:
         self.dice_result += result
         self.roll_count += 1
 
-
-
     def save_results(self, game):
         counts = {symbol: self.kept_dice.count(symbol) for symbol in ["1", "2", "3", "heart", "attack", "energy"]}
 
@@ -165,3 +162,18 @@ class Player:
                         player.take_damage(counts["attack"])
                         player.was_attacked = True
                         break
+
+class Monster:
+    def __init__(self, name, image):
+        self.name = name
+        self.image = image
+
+# Stała lista potworów
+MONSTERS = {
+    "gigazaur": Monster(name="Gigazaur", image="static/images/gigazaur.jpg"),
+    "mekadragon": Monster(name="Meka Dragon", image="static/images/mekadragon.jpg"),
+    "thekraken": Monster(name="The Kraken", image="static/images/thekraken.jpg"),
+    "cyberbunny": Monster(name="Cyber Bunny", image="static/images/cyberbunny.jpg"),
+    "alienoid": Monster(name="Alienoid", image="static/images/alienoid.jpg"),
+    "spacepenguin": Monster(name="Space Penguin", image="static/images/spacepenguin.jpg"),
+}
