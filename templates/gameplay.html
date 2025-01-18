@@ -95,6 +95,22 @@
     {% endfor %}
 </p>
 
+    <div class="cards">
+        <h2>Available Cards</h2>
+        {% for card in available_cards %}
+            <div class="card">
+                <h3>{{ card.name }}</h3>
+                <p>Cost: {{ card.cost }}</p>
+                <p>{{ card.description }}</p>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="card_id" value="{{ forloop.counter0 }}">
+                    <button type="submit" name="buy_card">Buy</button>
+                </form>
+            </div>
+        {% endfor %}
+    </div>
+
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {

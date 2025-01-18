@@ -211,6 +211,14 @@ def gameplay(request):
             current_player.kept_dice.extend(selected_dice)
             game.show_roll = True
 
+        if 'buy_card' in request.POST:
+            card_id = int(request.POST.get('card_id'))
+            card = game.available_cards[card_id]
+            try:
+                viewing_player.buy_card(card, game)
+            except Exception as e:
+                messages.error(request, str(e))
+
     if len(current_player.kept_dice) == 6:
         current_player.save_results(game)
 
@@ -229,6 +237,8 @@ def gameplay(request):
         'selected_dice': current_player.kept_dice,
         'show_roll': game.show_roll,
         'game': game,
+        "available_cards": game.available_cards,
+
     })
 
 def gameplay_view(request):
@@ -254,6 +264,7 @@ def gameplay_view(request):
         'dice': current_player.dice_result,
         'selected_dice': current_player.kept_dice,
         'game': game,
+        "available_cards": game.available_cards,
     })
 
 def get_gameplay_data(request):
@@ -269,6 +280,7 @@ def get_gameplay_data(request):
         'dice': current_player.dice_result,
         'selected_dice': current_player.kept_dice,
         'game': game,
+        "available_cards": game.available_cards,
     })
     return HttpResponse(gameplay_data_html)
 

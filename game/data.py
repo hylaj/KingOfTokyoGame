@@ -1,5 +1,7 @@
 import random
 import string
+from idlelib.help import copy_strip
+from tkinter.font import names
 from uuid import uuid4
 
 class Games:
@@ -28,6 +30,23 @@ class Game:
         self.show_roll = True
         self.attacking_player = None
         self.winner =  None
+        self.deck = CARDS.copy()
+        self.deck = CARDS.copy()  # Skopiowana lista kart dostępnych w grze
+        self.available_cards = self.draw_initial_cards()  # Karty dostępne do kupienia
+
+    def draw_initial_cards(self):
+        # Wybiera np. 3 karty z talii na start gry
+        return random.sample(self.deck, 3)
+
+    def replace_card(self, card):
+        # Zastąp kartę po zakupie nową kartą z talii
+        if card in self.available_cards:
+            self.available_cards.remove(card)
+            if self.deck:
+                new_card = random.choice(self.deck)
+                self.available_cards.append(new_card)
+                self.deck.remove(new_card)
+
 
     def add_player(self, player):
         if len(self.players) < 6:
@@ -100,7 +119,7 @@ class Player:
         self.monster = monster
         self.health = 3 #self.MAX_HEALTH
         self.victory = 0
-        self.energy = 0
+        self.energy = 10 #0
         self.in_tokyo = False
         self.is_active = True
         self.dice_result = []
@@ -128,6 +147,8 @@ class Player:
 
     def gain_energy(self, amount):
         self.energy += amount
+        if self.energy <= 0:
+            self.energy = 0
 
     def roll_player_dice(self):
         self.dice_result = []
@@ -168,6 +189,15 @@ class Player:
             game.attacking_player = None
             self.was_attacked = False
 
+    def buy_card(self, card, game):
+        if self.energy >= card.cost:
+            self.energy -= card.cost
+            card.effect(self, game)  # Aktywuj efekt karty
+            game.replace_card(card)
+        else:
+            raise Exception("Not enough energy to buy this card.")
+
+
 class Monster:
     def __init__(self, name, image):
         self.name = name
@@ -182,3 +212,93 @@ MONSTERS = {
     "alienoid": Monster(name="Alienoid", image="static/images/alienoid.jpg"),
     "spacepenguin": Monster(name="Space Penguin", image="static/images/spacepenguin.jpg"),
 }
+
+class Card:
+    def __init__(self, name, cost, effect, description):
+        self.name = name
+        self.cost = cost
+        self.effect = effect
+        self.description = description
+
+CARDS = [
+    Card(
+        name="Extra Claw",
+        cost=3,
+        effect=lambda player, game: [p.take_damage(1) for p in game.players if p.id != player.id and p.is_active],
+        description="Attack all players (health -1)."
+    ),
+    Card(
+        name="Health Boost",
+        cost=4,
+        effect=lambda player, game: player.gain_health(2),
+        description="Gain 2 health."
+    ),
+    Card(
+        name="Energy Drain",
+        cost=2,
+        effect=lambda player, game: [p.gain_energy(-3) for p in game.players if p.id != player.id and p.is_active],
+        description="Remove 3 energy from opponents."
+    ),
+    Card(
+        name="Group Heal",
+        cost=3,
+        effect=lambda player, game: [p.gain_health(1) for p in game.players if p.is_active],
+        description="All players gain 1 health."
+    ),
+    Card(
+        name="Overcharge",
+        cost=2,
+        effect=lambda player, game: [player.gain_energy(6), player.take_damage(2)],
+        description="Gain 6 energy, but take 2 damage."
+    ),
+    Card(
+        name="Piercing Strike",
+        cost=5,
+        effect=lambda player, game: [p.take_damage(2) for p in game.players if p.id != player.id and p.is_active],
+        description="Attack all opponents (health -2)."
+    ),
+    Card(
+        name="Life Leech",
+        cost=5,
+        effect=lambda player, game: [
+            p.take_damage(1) for p in game.players if p.id != player.id and p.is_active
+            ] + [player.gain_health(sum(1 for p in game.players if p.id != player.id and p.is_active))],
+        description="Steal 1 health from all opponents."
+    ),
+    Card(
+        name="Reinforcements",
+        cost=6,
+        effect=lambda player, game: [player.gain_health(3), player.gain_victory(1)],
+        description="Gain 3 health and 1 victory."
+    ),
+    Card(
+        name="Equalizer",
+        cost=6,
+        effect=lambda player, game: [
+            p.gain_energy(player.energy - p.energy) for p in game.players if p.is_active
+        ],
+        description="Equalize energy among all players."
+    ),
+    Card(
+        name="Chaos Wave",
+        cost=7,
+        effect=lambda player, game: [
+                                        p.take_damage(3) for p in game.players
+                                    ] + [p.gain_energy(-3) for p in game.players],
+        description="Damage all players (health -3) and drain 3 energy."
+    ),
+    Card(
+        name="Victory Rush",
+        cost=7,
+        effect=lambda player, game: player.gain_victory(3),
+        description="Gain 3 victory points."
+    ),
+    Card(
+        name="Sacrificial Pact",
+        cost=3,
+        effect=lambda player, game: [player.take_damage(5), player.gain_victory(3)],
+        description="Lose 5 health to gain 3 victory points."
+    )
+
+
+]
