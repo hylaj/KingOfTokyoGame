@@ -96,11 +96,18 @@
 </p>
 
 
-
 <script>
-
-
     document.addEventListener("DOMContentLoaded", function() {
+        const checkGameEnd = function() {
+            fetch("{% url 'check_game_status' %}")
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "finished") {
+                        window.location.href = "{% url 'end_game' %}";
+                    }
+                });
+        };
+
         const checkCurrentPlayer = function() {
             fetch("{% url 'check_current_player' game_code=game_code %}")
                 .then(response => response.json())
@@ -108,12 +115,21 @@
                     if (data.currentPlayer !== data.viewingPlayer) {
                         window.location.href = "{% url 'gameplay_view' game_code=game_code %}";
                     }
+                    if (!data.viewingPlayer_isActive) {
+                        window.location.href = "{% url 'eliminated_player_view' %}";
+                    }
                 });
         };
 
-        setInterval(checkCurrentPlayer, 3000);  // Check the status every 3 seconds
-    });
 
+        setInterval(() => {
+            checkGameEnd();
+            checkCurrentPlayer();
+        }, 1000);  // Sprawdzanie stanu gry co sekundę
+    });
 </script>
+
+
+
 
 {% endblock %}

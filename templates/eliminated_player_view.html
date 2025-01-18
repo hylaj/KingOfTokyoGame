@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+
+You have been eliminated
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const checkGameEnd = function() {
+            fetch("{% url 'check_game_status'%}")
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "finished") {
+                        window.location.href = "{% url 'end_game' %}";
+                    }
+                });
+        };
+
+        setInterval(checkGameEnd, 1000);  // Check the status every 1 second
+    });
+
+</script>
+
+{% endblock content %}

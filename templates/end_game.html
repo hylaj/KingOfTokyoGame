@@ -2,4 +2,8 @@
 {% block content %}
     <h1>Game over</h1>
     <h2>Winner: {{ game.winner.nickname }} - {{ game.winner.monster.name }}</h2>
+
+    <a href="{% url 'home' %}">Play again!</a>
+
+
 {% endblock content %}

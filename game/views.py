@@ -128,7 +128,8 @@ def wait_for_game(request, game_code):
         "current_player": current_player
     })
 
-def check_game_status(request, game_code):
+def check_game_status(request):
+    game_code=request.session.get('game_code')
     game = Games.get_game(game_code)
     if not game:
         messages.error(request, "Game not found")
@@ -174,7 +175,7 @@ def gameplay(request, game_code):
             return redirect("wait_for_game", game_code=game_code)
         elif game.status == 'finished':
             messages.error(request, "This game is finished")
-            return redirect("home")
+            return redirect("end_game")
 
     viewing_player_id = request.session.get("player_id")
     viewing_player = next((player for player in game.players if str(player.id) == viewing_player_id), None)
@@ -194,6 +195,8 @@ def gameplay(request, game_code):
                 game.tokyo_player = current_player
                 current_player.in_tokyo = True
                 current_player.gain_victory(1) #Gracz zyskuje 1 pkt kiedy wchodzi do Tokio
+                if game.check_end_game():
+                    return redirect("end_game")
 
         if 'save_dice_btn' in request.POST:
             selected_dice = request.POST.getlist("kept_dice", [])
@@ -205,6 +208,9 @@ def gameplay(request, game_code):
 
     if game.check_end_game():
         return redirect("end_game")
+
+    if not current_player.is_active:
+            return redirect("eliminated_player_view")
 
     return render(request, 'gameplay.html',{
         "players": game.players,
@@ -220,16 +226,19 @@ def gameplay(request, game_code):
 def gameplay_view(request, game_code):
     game = Games.get_game(game_code)
 
-    if game.status == 'finished':
-        return redirect("end_game")
-
     if not game:
         messages.error(request, "Game not found")
         return redirect("home")
 
+    if game.check_end_game():
+        return redirect("end_game")
+
     viewing_player_id = request.session.get("player_id")
     viewing_player = next((player for player in game.players if str(player.id) == viewing_player_id), None)
     current_player = game.get_current_player()
+
+    if not viewing_player.is_active:
+            return redirect("eliminated_player_view")
 
     if current_player==viewing_player:
         return redirect('gameplay', game_code=game_code)
@@ -246,9 +255,6 @@ def gameplay_view(request, game_code):
 
 def get_gameplay_data(request, game_code):
     game = Games.get_game(game_code)
-    if not game:
-        messages.error(request, "Game not found")
-        return redirect("home")
 
     viewing_player_id = request.session.get("player_id")
     viewing_player = next((player for player in game.players if str(player.id) == viewing_player_id), None)
@@ -267,9 +273,6 @@ def get_gameplay_data(request, game_code):
 
 def get_tokyo_player(request, game_code):
     game = Games.get_game(game_code)
-    if not game:
-        messages.error(request, "Game not found")
-        return redirect("home")
 
     tokyo_player_html=render_to_string("partials/get_tokyo_player.html", {
         "game": game,
@@ -298,6 +301,29 @@ def leave_tokyo(request, game_code):
     return redirect('gameplay_view', game_code=game_code)
 
 
+def eliminated_player_view(request):
+    game_code = request.session.get("game_code")
+    game = Games.get_game(game_code)
+    if not game:
+        messages.error(request, "Game not found")
+        return redirect("home")
+
+
+    player_id = request.session.get("player_id")
+    player = next((player for player in game.players if str(player.id) == player_id), None)
+
+    if player.in_tokyo:
+        player.in_tokyo = False
+        game.attacking_player.in_tokyo = True
+        game.tokyo_player = game.attacking_player
+        game.attacking_player.gain_victory(1)
+        player.was_attacked = False
+
+    return render(request, 'eliminated_player_view.html', {
+        'game': game,
+    })
+
+
 
 
 def check_current_player(request, game_code):
@@ -309,10 +335,12 @@ def check_current_player(request, game_code):
     current_player = game.get_current_player()
     current_player_id = str(current_player.id)
     viewing_player_id = request.session.get("player_id")
+    viewing_player = next((player for player in game.players if str(player.id) == viewing_player_id), None)
 
     return JsonResponse({
         "currentPlayer": current_player_id,
         "viewingPlayer": viewing_player_id,
+        "viewingPlayer_isActive": viewing_player.is_active,
     })
 
 def end_turn(request, game_code):

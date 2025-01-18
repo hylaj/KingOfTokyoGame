@@ -20,7 +20,7 @@
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const checkGameStatus = function() {
-                fetch("{% url 'check_game_status' game_code=game_code %}")
+                fetch("{% url 'check_game_status'%}")
                     .then(response => response.json())
                     .then(data => {
                         if (data.status === "playing") {

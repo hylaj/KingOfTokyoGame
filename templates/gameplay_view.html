@@ -70,7 +70,7 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const checkGameEnd = function() {
-            fetch("{% url 'check_game_status' game_code=game_code %}")
+            fetch("{% url 'check_game_status' %}")
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === "finished") {
@@ -86,8 +86,12 @@
                     if (data.currentPlayer === data.viewingPlayer) {
                         window.location.href = "{% url 'gameplay' game_code=game_code %}";
                     }
+                    if (!data.viewingPlayer_isActive) {
+                        window.location.href = "{% url 'eliminated_player_view' %}";
+                    }
                 });
         };
+
 
         setInterval(() => {
             checkGameEnd();

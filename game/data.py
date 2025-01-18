@@ -98,8 +98,8 @@ class Player:
         self.id = uuid4()
         self.nickname = nickname
         self.monster = monster
-        self.health = self.MAX_HEALTH
-        self.victory = 15
+        self.health = 3 #self.MAX_HEALTH
+        self.victory = 0
         self.energy = 0
         self.in_tokyo = False
         self.is_active = True
@@ -113,10 +113,12 @@ class Player:
         if self.health == 0:
             self.is_active = False
 
+
     def gain_health(self, amount):
         self.health = self.health + amount
         if self.health >= self.MAX_HEALTH:
             self.health = self.MAX_HEALTH
+
 
     def gain_victory(self, amount):
         self.victory = self.victory + amount
