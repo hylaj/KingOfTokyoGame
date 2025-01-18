@@ -4,17 +4,17 @@
     <p> Hello {{ current_player.nickname }}</p>
     <h2>Game code: {{ game_code }}</h2>
     <h2>Other players:</h2>
-<div id="players-list" hx-get="{% url 'get_players' game_code=game_code %}" hx-trigger="load, every 3s" hx-swap="innerHTML">
+<div id="players-list" hx-get="{% url 'get_players' %}" hx-trigger="load, every 3s" hx-swap="innerHTML">
     <ul>
         {% for player in players %}
-            <li>{{ player.nickname }} - {{ player.monster }}</li>
+            <li>{{ player.nickname }} - {{ player.monster.name }}</li>
         {% endfor %}
     </ul>
 </div>
     <p>Once all players will join, the game creator can start the game, by pressing "Start"</p>
 
  {% if current_player.id == players.0.id %}
-     <button><a href="{% url 'start_game' game_code=game_code %}">Start</a></button>
+     <button><a href="{% url 'start_game' %}">Start</a></button>
  {% endif %}
 
     <script>
@@ -24,12 +24,12 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.status === "playing") {
-                            window.location.href = "{% url 'gameplay_view' game_code=game_code %}";
+                            window.location.href = "{% url 'gameplay_view' %}";
                         }
                     });
             };
 
-            setInterval(checkGameStatus, 3000);  // Sprawdzanie statusu co 3 sekundy
+            setInterval(checkGameStatus, 2000);  // Sprawdzanie statusu co 3 sekundy
         });
     </script>
 {% endblock %}

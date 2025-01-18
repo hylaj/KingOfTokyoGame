@@ -1,6 +1,7 @@
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
+from django.core.exceptions import ObjectDoesNotExist
 from .forms import JoinGameForm, CreateGameForm
 from django.template.loader import render_to_string
 from django.http import HttpResponse
@@ -12,7 +13,6 @@ def home(request):
 
 def game_rules(request):
     return render(request, 'game_rules.html')
-
 
 def create_new_game(request):
     form = CreateGameForm(request.POST or None)
@@ -33,7 +33,7 @@ def create_new_game(request):
             game.add_player(new_player)
             request.session["player_id"] = str(new_player.id)
 
-            return redirect("wait_for_game", game_code=game.game_code)
+            return redirect("wait_for_game")
         else:
             messages.error(request, "Invalid form data. Please check your input.")
 
@@ -72,7 +72,7 @@ def create_form_join_game(request):
                 request.session["player_id"] = str(new_player.id)
                 request.session["game_code"] = game.game_code
 
-                return redirect("wait_for_game", game_code=game.game_code)
+                return redirect("wait_for_game")
 
     # Jeśli formularz nie jest poprawny lub wystąpił błąd, renderujemy stronę z błędami
     return render(request, "join_game.html", {"form": form})
@@ -91,7 +91,7 @@ def rejoin_game(request):
             player = next((p for p in game.players if str(p.id) == player_id), None)
             if player:
                 # Gracz i gra istnieją - przekieruj do gry
-                return redirect("gameplay", game_code=game_code)
+                return redirect("gameplay")
             else:
                 # Jeśli gracz nie istnieje w grze, usuń dane z sesji
                 del request.session["player_id"]
@@ -109,18 +109,31 @@ def rejoin_game(request):
     # Przekierowanie na stronę główną lub do formularza dołączenia
     return redirect("home")
 
-
-
-def wait_for_game(request, game_code):
+def get_game_and_player(request):
+    """
+    Pobiera grę i gracza z sesji. Rzuca wyjątek, jeśli gra lub gracz nie istnieją.
+    """
+    game_code = request.session.get("game_code")
     game = Games.get_game(game_code)
     if not game:
-        messages.error(request, 'Given game code does not exist')
-        return redirect("home")
-    if game.status == "playing":
-        return redirect("gameplay", game_code=game_code)
+        raise ObjectDoesNotExist("Game not found")
 
     player_id = request.session.get("player_id")
-    current_player = next((player for player in game.players if str(player.id) == player_id), None)
+    player = next((player for player in game.players if str(player.id) == player_id), None)
+    if not player:
+        raise ObjectDoesNotExist("Player not found")
+
+    return game, player
+
+def wait_for_game(request):
+    try:
+        game, current_player = get_game_and_player(request)
+    except ObjectDoesNotExist as e:
+        messages.error(request, str(e))
+        return redirect("home")
+
+    if game.status == "playing":
+        return redirect("gameplay")
 
     return render(request, "wait_for_game.html", {
         "players": game.players,
@@ -129,61 +142,56 @@ def wait_for_game(request, game_code):
     })
 
 def check_game_status(request):
-    game_code=request.session.get('game_code')
-    game = Games.get_game(game_code)
-    if not game:
-        messages.error(request, "Game not found")
+    try:
+        game,player = get_game_and_player(request)
+    except ObjectDoesNotExist as e:
+        messages.error(request, str(e))
         return redirect("home")
+
     return JsonResponse({"status": game.status})
 
 
-def get_players(request, game_code):
-    game = Games.get_game(game_code)
-    if not game:
-        messages.error(request, "Game not found")
-        return redirect("home")
-
+def get_players(request):
+    game, player = get_game_and_player(request)
     players_html = render_to_string("partials/players_list.html", {"players": game.players})
     return HttpResponse(players_html)
 
 
-def start_game(request, game_code):
-    game = Games.get_game(game_code)
-    player_id = request.session.get("player_id")
-
-    if not game:
-        messages.error(request, "Game not found")
+def start_game(request):
+    try:
+        game, viewing_player = get_game_and_player(request)
+    except ObjectDoesNotExist as e:
+        messages.error(request, str(e))
         return redirect("home")
+
     if len(game.players) < 2: #Musi być minimum 2 graczy, aby rozpocząć rozgrywkę
         messages.error(request, "Too few players.")
-        return redirect("wait_for_game", game_code=game_code)
-    if str(game.players[0].id) == player_id:  # Tylko twórca gry może ją rozpocząć
+        return redirect("wait_for_game")
+    if str(game.players[0].id) == str(viewing_player.id):  # Tylko twórca gry może ją rozpocząć
         game.start_game()
-        return redirect('gameplay', game_code=game_code)
+        return redirect('gameplay')
 
 
-def gameplay(request, game_code):
-    game = Games.get_game(game_code)
-
-    if not game:
-        messages.error(request, "Game not found")
+def gameplay(request):
+    try:
+        game, viewing_player = get_game_and_player(request)
+    except ObjectDoesNotExist as e:
+        messages.error(request, str(e))
         return redirect("home")
 
     if game.status != 'playing':
         if game.status == 'waiting':
             messages.error(request, "This game has not started yet")
-            return redirect("wait_for_game", game_code=game_code)
+            return redirect("wait_for_game")
         elif game.status == 'finished':
             messages.error(request, "This game is finished")
             return redirect("end_game")
 
-    viewing_player_id = request.session.get("player_id")
-    viewing_player = next((player for player in game.players if str(player.id) == viewing_player_id), None)
     current_player = game.get_current_player()
 
-    if str(current_player.id) != str(viewing_player_id):
+    if str(current_player.id) != str(viewing_player.id):
         messages.error(request, "Not your turn")
-        return redirect("gameplay_view", game_code=game_code)
+        return redirect("gameplay_view")
 
     if request.method == 'POST':
         if 'roll_dice_btn' in request.POST:
@@ -223,25 +231,20 @@ def gameplay(request, game_code):
         'game': game,
     })
 
-def gameplay_view(request, game_code):
-    game = Games.get_game(game_code)
-
-    if not game:
-        messages.error(request, "Game not found")
+def gameplay_view(request):
+    try:
+        game, viewing_player = get_game_and_player(request)
+    except ObjectDoesNotExist as e:
+        messages.error(request, str(e))
         return redirect("home")
+    current_player = game.get_current_player()
 
     if game.check_end_game():
         return redirect("end_game")
-
-    viewing_player_id = request.session.get("player_id")
-    viewing_player = next((player for player in game.players if str(player.id) == viewing_player_id), None)
-    current_player = game.get_current_player()
-
     if not viewing_player.is_active:
             return redirect("eliminated_player_view")
-
     if current_player==viewing_player:
-        return redirect('gameplay', game_code=game_code)
+        return redirect('gameplay')
 
     return render(request, 'gameplay_view.html',{
         "players": game.players,
@@ -253,11 +256,9 @@ def gameplay_view(request, game_code):
         'game': game,
     })
 
-def get_gameplay_data(request, game_code):
-    game = Games.get_game(game_code)
+def get_gameplay_data(request):
+    game, viewing_player = get_game_and_player(request)
 
-    viewing_player_id = request.session.get("player_id")
-    viewing_player = next((player for player in game.players if str(player.id) == viewing_player_id), None)
     current_player = game.get_current_player()
 
     gameplay_data_html = render_to_string("partials/gameplay_data.html", {
@@ -271,23 +272,20 @@ def get_gameplay_data(request, game_code):
     })
     return HttpResponse(gameplay_data_html)
 
-def get_tokyo_player(request, game_code):
-    game = Games.get_game(game_code)
-
+def get_tokyo_player(request):
+    game, viewing_player = get_game_and_player(request)
     tokyo_player_html=render_to_string("partials/get_tokyo_player.html", {
         "game": game,
     })
     return HttpResponse(tokyo_player_html)
 
 
-def leave_tokyo(request, game_code):
-    game = Games.get_game(game_code)
-    if not game:
-        messages.error(request, "Game not found")
+def leave_tokyo(request):
+    try:
+        game, viewing_player = get_game_and_player(request)
+    except ObjectDoesNotExist as e:
+        messages.error(request, str(e))
         return redirect("home")
-
-    viewing_player_id = request.session.get("player_id")
-    viewing_player = next((player for player in game.players if str(player.id) == viewing_player_id), None)
 
 #gracz może opuścić Tokio po ataku przez innego gracza w trakcie tury innego gracza lub na początku własnej tury, przed rzutem kostkami
     if viewing_player.was_attacked and viewing_player.roll_count == 0:
@@ -298,80 +296,76 @@ def leave_tokyo(request, game_code):
         viewing_player.was_attacked = False
     else:
         messages.warning(request, "You can't leave Tokyo now")
-    return redirect('gameplay_view', game_code=game_code)
+    return redirect('gameplay_view')
 
 
 def eliminated_player_view(request):
-    game_code = request.session.get("game_code")
-    game = Games.get_game(game_code)
-    if not game:
-        messages.error(request, "Game not found")
+    try:
+        game, viewing_player = get_game_and_player(request)
+    except ObjectDoesNotExist as e:
+        messages.error(request, str(e))
         return redirect("home")
 
-
-    player_id = request.session.get("player_id")
-    player = next((player for player in game.players if str(player.id) == player_id), None)
-
-    if player.in_tokyo:
-        player.in_tokyo = False
+    if viewing_player.in_tokyo:
+        viewing_player.in_tokyo = False
         game.attacking_player.in_tokyo = True
         game.tokyo_player = game.attacking_player
         game.attacking_player.gain_victory(1)
-        player.was_attacked = False
+        viewing_player.was_attacked = False
+
+    if game.check_end_game():
+        return redirect("end_game")
 
     return render(request, 'eliminated_player_view.html', {
         'game': game,
     })
 
 
-
-
-def check_current_player(request, game_code):
-    game = Games.get_game(game_code)
-    if not game:
-        messages.error(request, "Game not found")
+def check_current_player(request):
+    try:
+        game, viewing_player = get_game_and_player(request)
+    except ObjectDoesNotExist as e:
+        messages.error(request, str(e))
         return redirect("home")
-
     current_player = game.get_current_player()
-    current_player_id = str(current_player.id)
-    viewing_player_id = request.session.get("player_id")
-    viewing_player = next((player for player in game.players if str(player.id) == viewing_player_id), None)
 
     return JsonResponse({
-        "currentPlayer": current_player_id,
-        "viewingPlayer": viewing_player_id,
+        "currentPlayer": str(current_player.id),
+        "viewingPlayer": str(viewing_player.id),
         "viewingPlayer_isActive": viewing_player.is_active,
     })
 
-def end_turn(request, game_code):
-    game = Games.get_game(game_code)
-    if not game:
-        messages.error(request, "Game not found")
+def end_turn(request):
+    try:
+        game, viewing_player = get_game_and_player(request)
+    except ObjectDoesNotExist as e:
+        messages.error(request, str(e))
         return redirect("home")
     current_player = game.get_current_player()
+
     if len(current_player.kept_dice) == 6:
         game.next_turn()
-
         if game.check_end_game():
             return redirect("end_game")
 
-        return redirect('gameplay_view', game_code=game_code)
+        return redirect('gameplay_view')
     else:
         messages.info(request, "Roll the dice to complete your turn.")
-        return redirect('gameplay', game_code=game_code)
+        return redirect('gameplay')
 
 
 def end_game(request):
-    game_code=request.session.get("game_code")
-    game = Games.get_game(game_code)
-    if not game:
-        messages.error(request, "Game not found")
+    try:
+        game, viewing_player = get_game_and_player(request)
+    except ObjectDoesNotExist as e:
+        messages.error(request, str(e))
         return redirect("home")
 
     game.status = 'finished'
 
     return render(request, "end_game.html", {
         "game": game,
+        "viewing_player": viewing_player,
     })
 
 

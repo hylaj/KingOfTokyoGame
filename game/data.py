@@ -164,6 +164,9 @@ class Player:
                         player.take_damage(counts["attack"])
                         player.was_attacked = True
                         break
+        else:
+            game.attacking_player = None
+            self.was_attacked = False
 
 class Monster:
     def __init__(self, name, image):

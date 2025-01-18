@@ -41,7 +41,7 @@
 </table>
 
 <h2>Tokyo</h2>
-<p id="tokyo-player" hx-get="{% url 'get_tokyo_player' game_code=game_code %}" hx-trigger="load, every 1s" hx-swap="innerHTML">
+<p id="tokyo-player" hx-get="{% url 'get_tokyo_player' %}" hx-trigger="load, every 1s" hx-swap="innerHTML">
     {{ game.tokyo_player.nickname }}
 </p>
 
@@ -80,12 +80,12 @@
 
 {% if viewing_player.was_attacked and viewing_player.roll_count == 0 %}
 <button>
-    <a href="{% url 'leave_tokyo' game_code=game_code %}">Leave Tokyo</a>
+    <a href="{% url 'leave_tokyo' %}">Leave Tokyo</a>
 </button>
 {% endif %}
 
 <button>
-    <a href="{% url 'end_turn' game_code=game_code %}">End turn</a>
+    <a href="{% url 'end_turn' %}">End turn</a>
 </button>
 
 <h2>Kept dice:</h2>
@@ -109,11 +109,11 @@
         };
 
         const checkCurrentPlayer = function() {
-            fetch("{% url 'check_current_player' game_code=game_code %}")
+            fetch("{% url 'check_current_player' %}")
                 .then(response => response.json())
                 .then(data => {
                     if (data.currentPlayer !== data.viewingPlayer) {
-                        window.location.href = "{% url 'gameplay_view' game_code=game_code %}";
+                        window.location.href = "{% url 'gameplay_view' %}";
                     }
                     if (!data.viewingPlayer_isActive) {
                         window.location.href = "{% url 'eliminated_player_view' %}";
