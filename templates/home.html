@@ -1,7 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
-    <button  id="create-new-game"><a href="{% url 'create_game' %}"> Create New Game</a></button>
-    <button  id="join-game"><a href="{% url 'join_game' %}"> Join The Game</a></button>
-    <button  id="rejoin-game"><a href="{% url 'rejoin_game' %}">Rejoin Game</a></button>
-    <button  id="game-rules"><a href="{% url 'game_rules' %}">Game Manual</a></button>
+<div class="container mt-4">
+    <button class="btn btn-dark rounded-pill mb-3">
+        <a href="{% url 'create_game' %}" class="text-white text-decoration-none">Create New Game</a>
+    </button>
+    <button class="btn btn-dark btn-block rounded-pill mb-3">
+        <a href="{% url 'join_game' %}" class="text-white text-decoration-none">Join The Game</a>
+    </button>
+    <button class="btn btn-dark btn-block rounded-pill mb-3">
+        <a href="{% url 'rejoin_game' %}" class="text-white text-decoration-none">Rejoin Game</a>
+    </button>
+    <button class="btn btn-secondary btn-block rounded-pill mb-3">
+        <a href="{% url 'game_rules' %}" class="text-white text-decoration-none">Game Manual</a>
+    </button>
+</div>
 {% endblock content %}

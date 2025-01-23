@@ -1,7 +1,18 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div id="players-list" hx-get="{% url 'get_gameplay_data' %}" hx-trigger="load, every 1s" hx-swap="innerHTML">
+
+
+<div id="get_gameplay_data" hx-get="{% url 'get_gameplay_data' %}" hx-trigger="load, every 1s" hx-swap="innerHTML">
+
+<div>
+    <h3>Action Log</h3>
+    <ul>
+        {% for log in game.logs %}
+            <li>{{ log }}</li>
+        {% endfor %}
+    </ul>
+</div>
 
 <h2>Me:</h2>
 <table>

@@ -1,7 +1,5 @@
 import random
 import string
-from idlelib.help import copy_strip
-from tkinter.font import names
 from uuid import uuid4
 
 class Games:
@@ -33,6 +31,7 @@ class Game:
         self.deck = CARDS.copy()
         self.deck = CARDS.copy()  # Skopiowana lista kart dostępnych w grze
         self.available_cards = self.draw_initial_cards()  # Karty dostępne do kupienia
+        self.logs = []  # Lista do przechowywania logów akcj
 
     def draw_initial_cards(self):
         # Wybiera np. 3 karty z talii na start gry
@@ -46,16 +45,27 @@ class Game:
                 new_card = random.choice(self.deck)
                 self.available_cards.append(new_card)
                 self.deck.remove(new_card)
+                self.add_log(f"New card available: {new_card.name}")
 
+    def add_log(self, message):
+        # Dodaje wiadomość do logów gry i ogranicza liczbę logów
+        self.logs.append(message)
+        if len(self.logs) > 3:
+            self.logs.pop(0)  # Usuń najstarszą wiadomość, jeśli jest ich za dużo
 
     def add_player(self, player):
         if len(self.players) < 6:
             self.players.append(player)
+            self.add_log(f"Player {player.nickname} joined")
         else:
             raise Exception('Too many players')
 
     def start_game(self):
         self.status = 'playing'
+
+        self.add_log("Game started")
+        self.add_log(f"It's {self.players[0].nickname}'s turn!")
+
 
     def next_turn(self):
         current_player = self.players[self.current_turn]
@@ -74,6 +84,8 @@ class Game:
         if current_player.in_tokyo is True:
             current_player.gain_victory(2)
 
+        self.add_log(f"Now it's {current_player.nickname}'s turn!")
+
 
 
     def generate_game_code(self):
@@ -91,6 +103,7 @@ class Game:
         if winner:
             self.status = 'finished'
             self.winner = winner  # Przechowujemy zwycięzcę
+            self.add_log(f"Game ended")
             return True
 
         # Sprawdź, czy został tylko jeden aktywny gracz
@@ -131,6 +144,7 @@ class Player:
         self.health = max(0, self.health - amount)
         if self.health == 0:
             self.is_active = False
+
 
 
     def gain_health(self, amount):
@@ -174,12 +188,14 @@ class Player:
         if counts["attack"] > 0:
             game.attacking_player = self
             if self.in_tokyo:
+                game.add_log(f'{self.nickname} attacked everyone outside Tokyo!')
                 # Gracz w Tokio zadaje obrażenia wszystkim poza Tokio
                 for player in game.players:
                     if not player.in_tokyo:
                         player.take_damage(counts["attack"])
             else:
                 # Gracz poza Tokio zadaje obrażenia graczowi w Tokio
+                game.add_log(f'{self.nickname} attacked Tokyo player!')
                 for player in game.players:
                     if player.in_tokyo:
                         player.take_damage(counts["attack"])
@@ -194,6 +210,7 @@ class Player:
             self.energy -= card.cost
             card.effect(self, game)  # Aktywuj efekt karty
             game.replace_card(card)
+            game.add_log(f"{self.nickname} bought card {card.name}")
         else:
             raise Exception("Not enough energy to buy this card.")
 

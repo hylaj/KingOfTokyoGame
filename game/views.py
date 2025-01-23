@@ -1,11 +1,11 @@
 from django.contrib import messages
-from django.http import JsonResponse, HttpResponseRedirect
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from .forms import JoinGameForm, CreateGameForm
 from django.template.loader import render_to_string
 from django.http import HttpResponse
-from .data import MONSTERS, Games, Game, Player
+from .data import MONSTERS, Games, Player
 
 
 def home(request):
@@ -306,6 +306,8 @@ def leave_tokyo(request):
         game.tokyo_player = game.attacking_player
         game.attacking_player.gain_victory(1) #Gracz zyskuje 1 pkt za wejscie do Tokio
         viewing_player.was_attacked = False
+        game.add_log(f"{viewing_player.nickname} left Tokyo. {game.attacking_player.nickname} enters Tokyo.")
+
     else:
         messages.warning(request, "You can't leave Tokyo now")
     return redirect('gameplay_view')
