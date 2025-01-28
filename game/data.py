@@ -49,9 +49,9 @@ class Game:
 
     def add_log(self, message):
         # Dodaje wiadomość do logów gry i ogranicza liczbę logów
-        self.logs.append(message)
-        if len(self.logs) > 3:
-            self.logs.pop(0)  # Usuń najstarszą wiadomość, jeśli jest ich za dużo
+        self.logs.insert(0, message)
+        if len(self.logs) > 5:
+            self.logs.pop(5)  # Usuń najstarszą wiadomość, jeśli jest ich za dużo
 
     def add_player(self, player):
         if len(self.players) < 6:
@@ -72,6 +72,7 @@ class Game:
         current_player.dice_result = []
         current_player.kept_dice = []
         current_player.roll_count = 0
+        current_player.saved_results = False
 
         self.show_roll = True
 
@@ -139,6 +140,7 @@ class Player:
         self.roll_count = 0
         self.was_attacked = False
         self.displayed_dice = []
+        self.saved_results = False
 
     def take_damage(self, amount):
         self.health = max(0, self.health - amount)
@@ -211,7 +213,7 @@ class Player:
             self.energy -= card.cost
             card.effect(self, game)  # Aktywuj efekt karty
             game.replace_card(card)
-            game.add_log(f"{self.nickname} bought card {card.name}")
+            game.add_log(f"{self.nickname} used card {card.name}")
         else:
             raise Exception("Not enough energy to buy this card.")
 

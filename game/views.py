@@ -245,14 +245,17 @@ def gameplay(request):
         del request.session['form_token']
         request.session['form_token'] = get_random_string(length=32)
 
-    if len(current_player.kept_dice) == 6:
+
+    if len(current_player.kept_dice) == 6 and current_player.saved_results == False:
         current_player.save_results(game)
+        current_player.saved_results = True
 
     if game.check_end_game():
         return redirect("end_game")
 
     if not current_player.is_active:
-            return redirect("eliminated_player_view")
+        game.next_turn()
+        return redirect("eliminated_player_view")
 
     # Resetowanie tokenu po jego wykorzystaniu
 
@@ -316,11 +319,21 @@ def get_gameplay_data(request):
 
 def get_tokyo_player(request):
     game, viewing_player = get_game_and_player(request)
+    current_player = game.get_current_player()
     tokyo_player_html=render_to_string("partials/get_tokyo_player.html", {
         "game": game,
+        "current_player": current_player,
     })
     return HttpResponse(tokyo_player_html)
 
+def get_players_outside_tokyo(request):
+    game, viewing_player = get_game_and_player(request)
+    current_player = game.get_current_player()
+    tokyo_player_html=render_to_string("partials/get_players_outside_tokyo.html", {
+        "game": game,
+        "current_player": current_player,
+    })
+    return HttpResponse(tokyo_player_html)
 
 def leave_tokyo(request):
     try:
@@ -356,6 +369,7 @@ def eliminated_player_view(request):
         game.tokyo_player = game.attacking_player
         game.attacking_player.gain_victory(1)
         viewing_player.was_attacked = False
+
 
     if game.check_end_game():
         return redirect("end_game")

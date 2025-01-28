@@ -46,12 +46,12 @@
             {% endfor %}
 
 <h2>Tokyo</h2>
-
+{% if game.tokyo_player %}
 <img src="{% static game.tokyo_player.monster.image %}"
      alt="{{ game.tokyo_player.monster.name }}"
      class="monster-image">
 {{ game.tokyo_player.nickname }}
-
+{% endif %}
 
 
     <h2>Roll dice:</h2>
@@ -125,3 +125,7 @@
 </script>
 
 {% endblock %}
+
+
+
+

@@ -5,108 +5,169 @@
 <div class="container-fluid text-light text-center">
 
 <!-- Wiersz 1 - nagłówek -->
-    <div class="row border border-secondary">
-        <div class="col border border-secondary">
-            <h2>King of Tokyo</h2>
+    <div class="row mt-2">
+        <div class="col">
+            <h1 class="text-warning pb-2">King of Tokyo</h1>
         </div>
     </div>
 
 <!-- Wiersz 2 - akcja -->
-    <div class="row border border-secondary">
-        <div class="col border border-secondary">
-            <p>{{ current_player.nickname }}'s turn</p>
-        </div>
-        <div class="col border border-secondary">
-                {% for d in selected_dice %}
-                    <img src="{% static d.image %}"
-                         alt="{{ d.name }}"
-                         class="dice_submitted">
-                {% endfor %}
-
-                <form method="POST">
-                    {% csrf_token %}
-                    <input type="hidden" name="form_token" value="{{ form_token }}">
-                    {% for die in dice %}
-                        <label class="icon-checkbox-label">
-                            <input type="checkbox"
-                                   name="kept_dice"
-                                   value="{{ die.name }}"
-                                   style="display: none;"
-                                   {% if show_roll == True or current_player.roll_count == 3 %}disabled{% endif %}>
-                            <img src="{% static die.image %}"
-                                 alt="{{ die.name }}"
-                                 {% if show_roll == True or current_player.roll_count == 3 %}class="dice_disabled"{%  else %}class="dice"{% endif %}>
-                        </label>
-                    {% endfor %}
-
-                    {% if show_roll %}
-                        <button type="submit"
-                                name="roll_dice_btn"
-                                {% if current_player.kept_dice|length == 6 or current_player.roll_count == 3 %} disabled {% endif %}>
-                            Roll dice
-                        </button>
-                    {% else %}
-                        <button type="submit"
-                                name="save_dice_btn"
-                                {% if current_player.kept_dice|length == 6 or current_player.roll_count == 3 %} disabled {% endif %}>
-                            Save
-                        </button>
-                    {% endif %}
-                </form>
-        </div>
-
-        <div class="col border border-secondary">
-            {% if viewing_player.was_attacked and viewing_player.roll_count == 0 and viewing_player != game.attacking_player %}
-                <button>
-                    <a href="{% url 'leave_tokyo' %}">Leave Tokyo</a>
-                </button>
-            {% endif %}
-
-            <button>
-                <a href="{% url 'end_turn' %}">End turn</a>
-            </button>
-        </div>
+<div class="row rounded p-3 m-3 bg-dark text-light shadow">
+    <div class="col text-center">
+        <h3 class="text-warning mb-3">{{ current_player.nickname }}'s Turn</h3>
     </div>
 
-    <!-- Wiersz 3 - tokio i potwory -->
-<div class="row border border-secondary">
-<div class="col border border-secondary">
-    <div class="row border border-secondary">
-        <div class="col border border-secondary">
-            <h2>Tokyo</h2>
+    <div class="col d-flex justify-content-center align-items-center">
+        {% for d in selected_dice %}
+            <img src="{% static d.image %}"
+                 alt="{{ d.name }}"
+                 class="dice_submitted me-2">
+        {% endfor %}
 
-            <div id="tokyo-player" hx-get="{% url 'get_tokyo_player' %}" hx-trigger="load, every 1s" hx-swap="innerHTML">
-               {% if game.tokyo_player %}
-                   <p>{{ game.tokyo_player.nickname }}</p>
-                   <p>{{ game.tokyo_player.monster.name }}</p>
-                   <img src="{% static game.tokyo_player.monster.image %}"  alt="{{ game.tokyo_player.monster.name }}" class="monster-image">
-                   <img src="{% static 'images/heart.png' %}" alt="health points" class="attributes-image">
-                   <img src="{% static 'images/victory.png' %}" alt="victory points" class="attributes-image">
-                   <img src="{% static 'images/energy.png' %}" alt="health points" class="attributes-image">
-                   <p>{{ game.tokyo_player.health }} {{ game.tokyo_player.victory }} {{ game.tokyo_player.energy }}</p>
-               {% endif %}
+        <form method="POST" class="mt-3">
+            {% csrf_token %}
+            <input type="hidden" name="form_token" value="{{ form_token }}">
 
+            <div class="d-flex flex-wrap justify-content-center mb-3">
+                {% for die in dice %}
+                    <label class="icon-checkbox-label m-2">
+                        <input type="checkbox"
+                               name="kept_dice"
+                               value="{{ die.name }}"
+                               style="display: none;"
+                               {% if show_roll or current_player.roll_count == 3 %}disabled{% endif %}>
+                        <img src="{% static die.image %}"
+                             alt="{{ die.name }}"
+                             {% if show_roll or current_player.roll_count == 3 %}
+                                class="dice_disabled"
+                             {% else %}
+                                class="dice"
+                             {% endif %}>
+                    </label>
+                {% endfor %}
             </div>
 
+            <button type="submit"
+                    class="btn btn-warning btn-lg px-4"
+                    name="{% if show_roll %}roll_dice_btn{% else %}save_dice_btn{% endif %}"
+                    {% if current_player.kept_dice|length == 6 or current_player.roll_count == 3 %} disabled {% endif %}>
+                {% if show_roll %}
+                    Roll Dice
+                {% else %}
+                    Save Dice
+                {% endif %}
+            </button>
+        </form>
+    </div>
+
+    <div class="col text-center">
+        {% if viewing_player.was_attacked and viewing_player.roll_count == 0 and viewing_player != game.attacking_player %}
+            <a href="{% url 'leave_tokyo' %}" class="btn btn-danger btn-sm mb-2">Leave Tokyo</a>
+        {% endif %}
+
+        <a href="{% url 'end_turn' %}" class="btn btn-success btn-lg">End Turn</a>
+    </div>
+</div>
+
+
+    <!-- Wiersz 3 - tokio i potwory -->
+<div class="row m-2">
+<div class="col p-2">
+    <div class="row">
+
+    <!-- My monster section -->
+        <div class="col border-end border-secondary ">
+            <h2 class="text-start pb-2 ps-4 text-secondary">My monster</h2>
+            <div class="row align-items-center m-2 p-1 ">
+                <!-- Sekcja z obrazem potwora -->
+                <div class="col-4 d-flex justify-content-center align-items-center p-2 me-4">
+                    <img
+                        src="{% static viewing_player.monster.image %}"
+                        alt="{{ viewing_player.monster.name }}"
+                        class="img-fluid "
+                        style="max-height: 120px; max-width: 120px">
+                </div>
+
+                <!-- Sekcja z informacjami o graczu -->
+                <div class="col-6 text-start p-2">
+                    <h5 class="fw-bold mb-1 text-primary {% if current_player == viewing_player %} text-warning {% endif %}">
+                        {{ viewing_player.nickname }}
+                    </h5>
+                    <p class="mb-1 text-secondary">{{ viewing_player.monster.name }}</p>
+                    <p class="mb-0" style="font-size: 1.3em;">
+                        <img
+                            src="{% static 'images/heart.png' %}"
+                            alt="health points"
+                            class="me-1"
+                            style="height: 1.2em; width: 1.2em;">
+                        {{ viewing_player.health }}
+                        <img
+                            src="{% static 'images/victory.png' %}"
+                            alt="victory points"
+                            class="ms-3 me-1"
+                            style="height: 1.2em; width: 1.2em;">
+                        {{ viewing_player.victory }}
+                        <img
+                            src="{% static 'images/energy.png' %}"
+                            alt="energy points"
+                            class="ms-3 me-1"
+                            style="height: 1.2em; width: 1.2em;">
+                        {{ viewing_player.energy }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    <!-- Tokyo player section -->
+        <div class="col ">
+            <h2 class="text-start text-secondary pb-2 ps-4">Tokyo</h2>
+            <div id="tokyo-player" hx-get="{% url 'get_tokyo_player' %}" hx-trigger="load, every 1s" hx-swap="innerHTML"
+                 class="row align-items-center m-2 p-1">
+                {% if game.tokyo_player %}
+                   <div class="col-4 d-flex justify-content-center align-items-center p-2 me-4">
+                        <img
+                            src="{% static game.tokyo_player.monster.image %}"
+                            alt="{{ game.tokyo_player.monster.name }}"
+                            class="img-fluid "
+                            style="max-height: 120px; max-width: 120px">
+                    </div>
+
+                    <!-- Sekcja z informacjami o graczu -->
+                   <div class="col-6 text-start p-2">
+                        <h5 class="fw-bold mb-1 {% if current_player == game.tokyo_player %} text-warning {% endif %}">{{ game.tokyo_player.nickname }}</h5>
+                        <p class="mb-1 text-secondary">{{ game.tokyo_player.monster.name }}</p>
+                        <p class="mb-0" style="font-size: 1.3em;">
+                            <img
+                                src="{% static 'images/heart.png' %}"
+                                alt="health points"
+                                class="me-1"
+                                style="height: 1.2em; width: 1.2em;">
+                            {{ game.tokyo_player.health }}
+                            <img
+                                src="{% static 'images/victory.png' %}"
+                                alt="victory points"
+                                class="ms-3 me-1"
+                                style="height: 1.2em; width: 1.2em;">
+                            {{ game.tokyo_player.victory }}
+                            <img
+                                src="{% static 'images/energy.png' %}"
+                                alt="energy points"
+                                class="ms-3 me-1"
+                                style="height: 1.2em; width: 1.2em;">
+                            {{ game.tokyo_player.energy }}
+                        </p>
+                    </div>
+               {% endif %}
+            </div>
         </div>
 
-        <div class="col border border-secondary">
-        <h2>My monster</h2>
-                <p>{{ viewing_player.nickname }}</p>
-                <p>{{ game.tokyo_player.monster.name }}</p>
-                <img src="{% static viewing_player.monster.image %}"  alt="{{ player.monster.name }}" class="monster-image">
-                <img src="{% static 'images/heart.png' %}" alt="health points" class="attributes-image">
-                <img src="{% static 'images/victory.png' %}" alt="victory points" class="attributes-image">
-                <img src="{% static 'images/energy.png' %}" alt="health points" class="attributes-image">
-                <p>{{ viewing_player.health }} {{ viewing_player.victory }} {{ viewing_player.energy }}</p>
-        </div>
+
 
     </div>
 <!-- Wiersz 4 - karty i logi --->
-    <div class="row border border-secondary">
-        <div class="col border border-secondary">
-        <div class="row border border-secondary">
-            <h2>Available Cards</h2>
+    <div class="row border-top border-secondary m-3">
+        <div class="col mt-3">
+        <div class="row">
+            <h2 class="text-start text-secondary mb-3 ms-4 ">Available Cards</h2>
             {% for card in available_cards %}
                 <div class="col border border-secondary">
                     <h6>{{ card.name }}</h6>
@@ -123,32 +184,68 @@
         </div>
         </div>
 
-    <div class="col border border-secondary">
-        <h2>Action Log</h2>
-        <ul>
+    <div class="col border-start border-secondary mt-3">
+        <h2 class="text-start text-secondary mb-3 ms-4 ">Action Log</h2>
+        <ul class="list-group">
             {% for log in game.logs %}
-                <li>{{ log }}</li>
+               <li class="list-group-item d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                   {{ log }}
+                <span class="badge text-bg-primary rounded-pill">14</span>
+              </li>
             {% endfor %}
         </ul>
     </div>
     </div>
 </div>
 <!--- gracze --->
-<div class="col-4 border border-secondary">
-        <h2>Players:</h2>
-            {% for player in game.players %}
-                <p>{{ player.nickname }}</p>
-                <p>{{ game.tokyo_player.monster.name }}</p>
-                <img src="{% static player.monster.image %}"  alt="{{ player.monster.name }}" class="monster-image">
-                <img src="{% static 'images/heart.png' %}" alt="health points" class="attributes-image">
-                <img src="{% static 'images/victory.png' %}" alt="victory points" class="attributes-image">
-                <img src="{% static 'images/energy.png' %}" alt="health points" class="attributes-image">
-                <p>{{ player.health }} {{ player.victory }} {{ player.energy }}</p>
+<div class="col-4 p-2 border-start border-secondary" id="get_players_outside_tokyo" hx-get="{% url 'get_players_outside_tokyo' %}" hx-trigger="load, every 1s" hx-swap="innerHTML">
+    <h2 class="text-start text-secondary mb-3 ms-4 ">Suburbs of Tokyo</h2>
+    {% for player in game.players %}
+        {% if player != game.tokyo_player %}
+    <div class="row align-items-center border rounded mb-3 ms-4 me-4 p-1
+        {% if current_player == player %}
+            border-warning
+        {% else %}
+            border-secondary
+        {% endif %}">
+        <!-- Sekcja z obrazem potwora -->
+        <div class="col-4 d-flex justify-content-center align-items-center p-2 rounded-start">
+            <img
+                src="{% static player.monster.image %}"
+                alt="{{ player.monster.name }}"
+                class="img-fluid"
+                style="max-height: 80px;">
+        </div>
 
-            {% endfor %}
-
-
+        <!-- Sekcja z informacjami o graczu -->
+        <div class="col-6 text-start p-2">
+            <h5 class="fw-bold mb-1">{{ player.nickname }}</h5>
+            <p class="mb-1 text-secondary">{{ player.monster.name }}</p>
+            <p class="mb-0">
+                <img
+                    src="{% static 'images/heart.png' %}"
+                    alt="health points"
+                    class="me-1"
+                    style="height: 20px; width: 20px;">
+                {{ player.health }}
+                <img
+                    src="{% static 'images/victory.png' %}"
+                    alt="victory points"
+                    class="ms-3 me-1"
+                    style="height: 20px; width: 20px;">
+                {{ player.victory }}
+                <img
+                    src="{% static 'images/energy.png' %}"
+                    alt="energy points"
+                    class="ms-3 me-1"
+                    style="height: 20px; width: 20px;">
+                {{ player.energy }}
+            </p>
+        </div>
     </div>
+        {% endif %}
+    {% endfor %}
+</div>
 </div>
 </div>
 

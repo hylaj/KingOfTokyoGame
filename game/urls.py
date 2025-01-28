@@ -14,6 +14,7 @@ urlpatterns = [
     path("get_players", views.get_players, name="get_players"),
     path("get_gameplay_data", views.get_gameplay_data, name="get_gameplay_data"),
     path("get_tokyo_player", views.get_tokyo_player, name="get_tokyo_player"),
+    path("get_players_outside_tokyo", views.get_players_outside_tokyo, name="get_players_outside_tokyo"),
     path("start_game", views.start_game, name="start_game"),
     path('check_current_player', views.check_current_player, name='check_current_player'),
     path('gameplay_view', views.gameplay_view, name='gameplay_view'),

@@ -1,10 +1,36 @@
 {% load static %}
 {% if game.tokyo_player %}
-    <p>{{ game.tokyo_player.nickname }}</p>
-    <p>{{ game.tokyo_player.monster.name }}</p>
-    <img src="{% static game.tokyo_player.monster.image %}"  alt="{{ game.tokyo_player.monster.name }}" class="monster-image">
-    <img src="{% static 'images/heart.png' %}" alt="health points" class="attributes-image">
-    <img src="{% static 'images/victory.png' %}" alt="victory points" class="attributes-image">
-    <img src="{% static 'images/energy.png' %}" alt="health points" class="attributes-image">
-    <p>{{ game.tokyo_player.health }} {{ game.tokyo_player.victory }} {{ game.tokyo_player.energy }}</p>
-{% endif %}
+                   <div class="col-4 d-flex justify-content-center align-items-center p-2 me-4">
+                        <img
+                            src="{% static game.tokyo_player.monster.image %}"
+                            alt="{{ game.tokyo_player.monster.name }}"
+                            class="img-fluid "
+                            style="max-height: 120px; max-width: 120px">
+                    </div>
+
+                    <!-- Sekcja z informacjami o graczu -->
+                   <div class="col-6 text-start p-2">
+                        <h5 class="fw-bold mb-1 {% if current_player == game.tokyo_player %} text-warning {% endif %}">{{ game.tokyo_player.nickname }}</h5>
+                        <p class="mb-1 text-secondary">{{ game.tokyo_player.monster.name }}</p>
+                        <p class="mb-0" style="font-size: 1.3em;">
+                            <img
+                                src="{% static 'images/heart.png' %}"
+                                alt="health points"
+                                class="me-1"
+                                style="height: 1.2em; width: 1.2em;">
+                            {{ game.tokyo_player.health }}
+                            <img
+                                src="{% static 'images/victory.png' %}"
+                                alt="victory points"
+                                class="ms-3 me-1"
+                                style="height: 1.2em; width: 1.2em;">
+                            {{ game.tokyo_player.victory }}
+                            <img
+                                src="{% static 'images/energy.png' %}"
+                                alt="energy points"
+                                class="ms-3 me-1"
+                                style="height: 1.2em; width: 1.2em;">
+                            {{ game.tokyo_player.energy }}
+                        </p>
+                    </div>
+               {% endif %}
