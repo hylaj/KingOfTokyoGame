@@ -1,124 +1,156 @@
 {% extends "base.html" %}
-
+{% load static %}
 {% block content %}
 
-<div>
-    <h3>Action Log</h3>
-    <ul>
-        {% for log in game.logs %}
-            <li>{{ log }}</li>
-        {% endfor %}
-    </ul>
-</div>
+<div class="container-fluid text-light text-center">
 
-<h2>Me:</h2>
-<table>
-    <tr>
-        <th>Name</th>
-        <th>Monster</th>
-        <th>Health</th>
-        <th>Victory</th>
-        <th>Energy</th>
-    </tr>
-    <tr>
-        <td>{{ viewing_player.nickname }}</td>
-        <td>{{ viewing_player.monster.name }}</td>
-        <td>{{ viewing_player.health }}</td>
-        <td>{{ viewing_player.victory }}</td>
-        <td>{{ viewing_player.energy }}</td>
-    </tr>
-</table>
-
-<h2>Players:</h2>
-<table>
-    <tr>
-        <th>Name</th>
-        <th>Monster</th>
-        <th>Health</th>
-        <th>Victory</th>
-        <th>Energy</th>
-    </tr>
-    {% for player in players %}
-    <tr>
-        <td>{{ player.nickname }}</td>
-        <td>{{ player.monster.name }}</td>
-        <td>{{ player.health }}</td>
-        <td>{{ player.victory }}</td>
-        <td>{{ player.energy }}</td>
-    </tr>
-    {% endfor %}
-</table>
-
-<h2>Tokyo</h2>
-<p id="tokyo-player" hx-get="{% url 'get_tokyo_player' %}" hx-trigger="load, every 1s" hx-swap="innerHTML">
-    {{ game.tokyo_player.nickname }}
-</p>
-
-<form method="POST">
-    {% csrf_token %}
-    <h2>Roll dice:</h2>
-    <div>
-        {% for die in dice %}
-        <label>
-            <input type="checkbox"
-                   name="kept_dice"
-                   value="{{ die }}"
-                   {% if show_roll == True or current_player.roll_count == 3 %}disabled{% endif %}>
-                   ({{ die }})
-        </label><br>
-        {% endfor %}
+<!-- Wiersz 1 - nagłówek -->
+    <div class="row border border-secondary">
+        <div class="col border border-secondary">
+            <h2>King of Tokyo</h2>
+        </div>
     </div>
-    {% if show_roll %}
-    <button type="submit"
-            name="roll_dice_btn"
-            {% if current_player.kept_dice|length == 6 or current_player.roll_count == 3 %}
-            disabled
-            {% endif %}>
-        Roll dice
-    </button>
-    {% else %}
-    <button type="submit"
-            name="save_dice_btn"
-            {% if current_player.kept_dice|length == 6 or current_player.roll_count == 3 %}
-            disabled
-            {% endif %}>
-        Save
-    </button>
-    {% endif %}
-</form>
 
-{% if viewing_player.was_attacked and viewing_player.roll_count == 0 %}
-<button>
-    <a href="{% url 'leave_tokyo' %}">Leave Tokyo</a>
-</button>
-{% endif %}
+<!-- Wiersz 2 - akcja -->
+    <div class="row border border-secondary">
+        <div class="col border border-secondary">
+            <p>{{ current_player.nickname }}'s turn</p>
+        </div>
+        <div class="col border border-secondary">
+                {% for d in selected_dice %}
+                    <img src="{% static d.image %}"
+                         alt="{{ d.name }}"
+                         class="dice_submitted">
+                {% endfor %}
 
-<button>
-    <a href="{% url 'end_turn' %}">End turn</a>
-</button>
-
-<h2>Kept dice:</h2>
-<p>
-    {% for die in selected_dice %}
-    ({{ die }})
-    {% endfor %}
-</p>
-
-    <div class="cards">
-        <h2>Available Cards</h2>
-        {% for card in available_cards %}
-            <div class="card">
-                <h3>{{ card.name }}</h3>
-                <p>Cost: {{ card.cost }}</p>
-                <p>{{ card.description }}</p>
-                <form method="post">
+                <form method="POST">
                     {% csrf_token %}
-                    <input type="hidden" name="card_id" value="{{ forloop.counter0 }}">
-                    <button type="submit" name="buy_card">Buy</button>
+                    <input type="hidden" name="form_token" value="{{ form_token }}">
+                    {% for die in dice %}
+                        <label class="icon-checkbox-label">
+                            <input type="checkbox"
+                                   name="kept_dice"
+                                   value="{{ die.name }}"
+                                   style="display: none;"
+                                   {% if show_roll == True or current_player.roll_count == 3 %}disabled{% endif %}>
+                            <img src="{% static die.image %}"
+                                 alt="{{ die.name }}"
+                                 {% if show_roll == True or current_player.roll_count == 3 %}class="dice_disabled"{%  else %}class="dice"{% endif %}>
+                        </label>
+                    {% endfor %}
+
+                    {% if show_roll %}
+                        <button type="submit"
+                                name="roll_dice_btn"
+                                {% if current_player.kept_dice|length == 6 or current_player.roll_count == 3 %} disabled {% endif %}>
+                            Roll dice
+                        </button>
+                    {% else %}
+                        <button type="submit"
+                                name="save_dice_btn"
+                                {% if current_player.kept_dice|length == 6 or current_player.roll_count == 3 %} disabled {% endif %}>
+                            Save
+                        </button>
+                    {% endif %}
                 </form>
-            </div>
-        {% endfor %}
+        </div>
+
+        <div class="col border border-secondary">
+            {% if viewing_player.was_attacked and viewing_player.roll_count == 0 and viewing_player != game.attacking_player %}
+                <button>
+                    <a href="{% url 'leave_tokyo' %}">Leave Tokyo</a>
+                </button>
+            {% endif %}
+
+            <button>
+                <a href="{% url 'end_turn' %}">End turn</a>
+            </button>
+        </div>
     </div>
+
+    <!-- Wiersz 3 - tokio i potwory -->
+<div class="row border border-secondary">
+<div class="col border border-secondary">
+    <div class="row border border-secondary">
+        <div class="col border border-secondary">
+            <h2>Tokyo</h2>
+
+            <div id="tokyo-player" hx-get="{% url 'get_tokyo_player' %}" hx-trigger="load, every 1s" hx-swap="innerHTML">
+               {% if game.tokyo_player %}
+                   <p>{{ game.tokyo_player.nickname }}</p>
+                   <p>{{ game.tokyo_player.monster.name }}</p>
+                   <img src="{% static game.tokyo_player.monster.image %}"  alt="{{ game.tokyo_player.monster.name }}" class="monster-image">
+                   <img src="{% static 'images/heart.png' %}" alt="health points" class="attributes-image">
+                   <img src="{% static 'images/victory.png' %}" alt="victory points" class="attributes-image">
+                   <img src="{% static 'images/energy.png' %}" alt="health points" class="attributes-image">
+                   <p>{{ game.tokyo_player.health }} {{ game.tokyo_player.victory }} {{ game.tokyo_player.energy }}</p>
+               {% endif %}
+
+            </div>
+
+        </div>
+
+        <div class="col border border-secondary">
+        <h2>My monster</h2>
+                <p>{{ viewing_player.nickname }}</p>
+                <p>{{ game.tokyo_player.monster.name }}</p>
+                <img src="{% static viewing_player.monster.image %}"  alt="{{ player.monster.name }}" class="monster-image">
+                <img src="{% static 'images/heart.png' %}" alt="health points" class="attributes-image">
+                <img src="{% static 'images/victory.png' %}" alt="victory points" class="attributes-image">
+                <img src="{% static 'images/energy.png' %}" alt="health points" class="attributes-image">
+                <p>{{ viewing_player.health }} {{ viewing_player.victory }} {{ viewing_player.energy }}</p>
+        </div>
+
+    </div>
+<!-- Wiersz 4 - karty i logi --->
+    <div class="row border border-secondary">
+        <div class="col border border-secondary">
+        <div class="row border border-secondary">
+            <h2>Available Cards</h2>
+            {% for card in available_cards %}
+                <div class="col border border-secondary">
+                    <h6>{{ card.name }}</h6>
+                    <p>Cost: {{ card.cost }}</p>
+                    <p>{{ card.description }}</p>
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_token" value="{{ form_token }}">
+                        <input type="hidden" name="card_id" value="{{ forloop.counter0 }}">
+                        <button type="submit" name="buy_card">Buy</button>
+                    </form>
+                </div>
+            {% endfor %}
+        </div>
+        </div>
+
+    <div class="col border border-secondary">
+        <h2>Action Log</h2>
+        <ul>
+            {% for log in game.logs %}
+                <li>{{ log }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    </div>
+</div>
+<!--- gracze --->
+<div class="col-4 border border-secondary">
+        <h2>Players:</h2>
+            {% for player in game.players %}
+                <p>{{ player.nickname }}</p>
+                <p>{{ game.tokyo_player.monster.name }}</p>
+                <img src="{% static player.monster.image %}"  alt="{{ player.monster.name }}" class="monster-image">
+                <img src="{% static 'images/heart.png' %}" alt="health points" class="attributes-image">
+                <img src="{% static 'images/victory.png' %}" alt="victory points" class="attributes-image">
+                <img src="{% static 'images/energy.png' %}" alt="health points" class="attributes-image">
+                <p>{{ player.health }} {{ player.victory }} {{ player.energy }}</p>
+
+            {% endfor %}
+
+
+    </div>
+</div>
+</div>
 
 
 <script>
@@ -153,8 +185,4 @@
         }, 1000);  // Sprawdzanie stanu gry co sekundę
     });
 </script>
-
-
-
-
 {% endblock %}

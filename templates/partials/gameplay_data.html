@@ -1,3 +1,5 @@
+{% load static %}
+
 <div>
     <h3>Action Log</h3>
     <ul>
@@ -26,27 +28,25 @@
 </table>
 
 <h2>Players:</h2>
-<table>
-    <tr>
-        <th>Name</th>
-        <th>Monster</th>
-        <th>Health</th>
-        <th>Victory</th>
-        <th>Energy</th>
-    </tr>
-    {% for player in players %}
-    <tr>
-        <td>{{ player.nickname }}</td>
-        <td>{{ player.monster.name }}</td>
-        <td>{{ player.health }}</td>
-        <td>{{ player.victory }}</td>
-        <td>{{ player.energy }}</td>
-    </tr>
-    {% endfor %}
-</table>
+{% for player in players %}
+                <p>{{ player.nickname }}</p>
+                <img src="{% static player.monster.image %}"  alt="{{ player.monster.name }}" class="monster-image">
+                <img src="{% static 'images/heart.png' %}" alt="health points" class="attributes-image">
+                <img src="{% static 'images/victory.png' %}" alt="victory points" class="attributes-image">
+                <img src="{% static 'images/energy.png' %}" alt="health points" class="attributes-image">
+                <p>{{ player.health }}</p>
+                <p>{{ player.victory }}</p>
+                <p>{{ player.energy }}</p>
+
+            {% endfor %}
 
 <h2>Tokyo</h2>
-<p>{{ game.tokyo_player.nickname }}</p>
+
+<img src="{% static game.tokyo_player.monster.image %}"
+     alt="{{ game.tokyo_player.monster.name }}"
+     class="monster-image">
+{{ game.tokyo_player.nickname }}
+
 
 <form method="POST">
     {% csrf_token %}
@@ -58,7 +58,7 @@
     </div>
 </form>
 
-{% if viewing_player.was_attacked %}
+{% if viewing_player.was_attacked == True and viewing_player.roll_count == 0 and viewing_player != game.attacking_player %}
 <button>
     <a href="{% url 'leave_tokyo' %}">Leave Tokyo</a>
 </button>

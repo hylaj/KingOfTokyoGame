@@ -1,1 +1,10 @@
-<p>{{ game.tokyo_player.nickname }}</p>
+{% load static %}
+{% if game.tokyo_player %}
+    <p>{{ game.tokyo_player.nickname }}</p>
+    <p>{{ game.tokyo_player.monster.name }}</p>
+    <img src="{% static game.tokyo_player.monster.image %}"  alt="{{ game.tokyo_player.monster.name }}" class="monster-image">
+    <img src="{% static 'images/heart.png' %}" alt="health points" class="attributes-image">
+    <img src="{% static 'images/victory.png' %}" alt="victory points" class="attributes-image">
+    <img src="{% static 'images/energy.png' %}" alt="health points" class="attributes-image">
+    <p>{{ game.tokyo_player.health }} {{ game.tokyo_player.victory }} {{ game.tokyo_player.energy }}</p>
+{% endif %}

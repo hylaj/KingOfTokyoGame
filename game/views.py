@@ -5,9 +5,9 @@ from django.core.exceptions import ObjectDoesNotExist
 from .forms import JoinGameForm, CreateGameForm
 from django.template.loader import render_to_string
 from django.http import HttpResponse
-from .data import MONSTERS, Games, Player
-
-
+from .data import MONSTERS, Games, Player, DICE, Die
+from collections import Counter
+from django.utils.crypto import get_random_string
 def home(request):
     return render(request, 'home.html')
 
@@ -189,27 +189,50 @@ def gameplay(request):
 
     current_player = game.get_current_player()
 
+
     if str(current_player.id) != str(viewing_player.id):
         messages.error(request, "Not your turn")
         return redirect("gameplay_view")
 
+    if 'form_token' not in request.session:
+        request.session['form_token'] = get_random_string(length=32)
+
     if request.method == 'POST':
+        submitted_token = request.POST.get('form_token')
+        # Sprawdzamy, czy token jest zgodny z tym w sesji
+        if submitted_token != request.session.get('form_token'):
+            messages.warning(request, "Please do not refresh the page while playing your turn.")
+            return redirect('gameplay')
+
         if 'roll_dice_btn' in request.POST:
             current_player.roll_player_dice()
             game.show_roll = False
             if current_player.roll_count == 3:
                 current_player.kept_dice.extend(current_player.dice_result)
-            if game.tokyo_player is None and "attack" in current_player.dice_result: #Pierwszy gracz, który na początku gry wyrzuci co najmniej jeden symbol ataku przemieszcza swój pionek do Tokio
+                current_player.displayed_dice= []
+            if game.tokyo_player is None and any(dice.name == "attack" for dice in current_player.dice_result): #Pierwszy gracz, który na początku gry wyrzuci co najmniej jeden symbol ataku przemieszcza swój pionek do Tokio
                 game.tokyo_player = current_player
                 current_player.in_tokyo = True
                 current_player.gain_victory(1) #Gracz zyskuje 1 pkt kiedy wchodzi do Tokio
                 if game.check_end_game():
                     return redirect("end_game")
 
+
         if 'save_dice_btn' in request.POST:
-            selected_dice = request.POST.getlist("kept_dice", [])
+            selected_dice_names = request.POST.getlist("kept_dice", [])
+            selected_dice = []
+            for name in selected_dice_names:
+                # Znajdujemy kostkę, która pasuje do każdego wybranego nazwy
+                die = next((d for d in DICE if d.name == name), None)
+                if die:
+                    selected_dice.append(die)
             current_player.kept_dice.extend(selected_dice)
             game.show_roll = True
+
+            counter1=Counter(current_player.dice_result)
+            counter2=Counter(selected_dice)
+            result_counter=counter1-counter2
+            current_player.displayed_dice=list(result_counter.elements())
 
         if 'buy_card' in request.POST:
             card_id = int(request.POST.get('card_id'))
@@ -218,6 +241,9 @@ def gameplay(request):
                 viewing_player.buy_card(card, game)
             except Exception as e:
                 messages.error(request, str(e))
+
+        del request.session['form_token']
+        request.session['form_token'] = get_random_string(length=32)
 
     if len(current_player.kept_dice) == 6:
         current_player.save_results(game)
@@ -228,16 +254,20 @@ def gameplay(request):
     if not current_player.is_active:
             return redirect("eliminated_player_view")
 
+    # Resetowanie tokenu po jego wykorzystaniu
+
+
     return render(request, 'gameplay.html',{
         "players": game.players,
         "game_code": game.game_code,
         "viewing_player": viewing_player,
         "current_player": current_player,
-        'dice': current_player.dice_result,
+        'dice': current_player.displayed_dice,
         'selected_dice': current_player.kept_dice,
         'show_roll': game.show_roll,
         'game': game,
         "available_cards": game.available_cards,
+        "form_token": request.session.get('form_token'),
 
     })
 
@@ -261,7 +291,7 @@ def gameplay_view(request):
         "game_code": game.game_code,
         "viewing_player": viewing_player,
         "current_player": current_player,
-        'dice': current_player.dice_result,
+        'dice': current_player.displayed_dice,
         'selected_dice': current_player.kept_dice,
         'game': game,
         "available_cards": game.available_cards,
@@ -277,7 +307,7 @@ def get_gameplay_data(request):
         "game_code": game.game_code,
         "viewing_player": viewing_player,
         "current_player": current_player,
-        'dice': current_player.dice_result,
+        'dice': current_player.displayed_dice,
         'selected_dice': current_player.kept_dice,
         'game': game,
         "available_cards": game.available_cards,
@@ -300,7 +330,7 @@ def leave_tokyo(request):
         return redirect("home")
 
 #gracz może opuścić Tokio po ataku przez innego gracza w trakcie tury innego gracza lub na początku własnej tury, przed rzutem kostkami
-    if viewing_player.was_attacked and viewing_player.roll_count == 0:
+    if viewing_player.was_attacked and viewing_player.roll_count == 0 and viewing_player != game.attacking_player:
         viewing_player.in_tokyo = False
         game.attacking_player.in_tokyo = True
         game.tokyo_player = game.attacking_player

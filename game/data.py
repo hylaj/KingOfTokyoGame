@@ -117,8 +117,7 @@ class Game:
 
     @staticmethod
     def roll_dice(num_dice=6):
-        symbols = ["1", "2", "3", "heart", "attack", "energy"]
-        return [random.choice(symbols) for _ in range(num_dice)]
+        return [random.choice(DICE) for _ in range(num_dice)]
 
 
 
@@ -139,6 +138,7 @@ class Player:
         self.kept_dice = []
         self.roll_count = 0
         self.was_attacked = False
+        self.displayed_dice = []
 
     def take_damage(self, amount):
         self.health = max(0, self.health - amount)
@@ -170,22 +170,23 @@ class Player:
         result = Game.roll_dice(num_dice_to_roll)
         self.dice_result += result
         self.roll_count += 1
+        self.displayed_dice=self.dice_result
 
     def save_results(self, game):
-        counts = {symbol: self.kept_dice.count(symbol) for symbol in ["1", "2", "3", "heart", "attack", "energy"]}
+        counts = {die.name: sum(d.name == die.name for d in self.kept_dice) for die in DICE}
 
-        self.gain_energy(counts["energy"])
+        self.gain_energy(counts.get("energy", 0))
 
         if not self.in_tokyo:
-            self.gain_health(counts["heart"])
+            self.gain_health(counts.get("heart", 0))
 
         for num in ["1", "2", "3"]:
-            count = counts[num]
+            count = counts.get(num, 0)
             if count >= 3:
                 self.gain_victory(int(num))  # Dodaje punkty równe wartości symbolu
                 self.gain_victory(count-3) # Za każdą dodatkową kość powyżej 3: dodaje 1 punkt zwycięstwa
 
-        if counts["attack"] > 0:
+        if counts.get("attack", 0) > 0:
             game.attacking_player = self
             if self.in_tokyo:
                 game.add_log(f'{self.nickname} attacked everyone outside Tokyo!')
@@ -222,13 +223,31 @@ class Monster:
 
 # Stała lista potworów
 MONSTERS = {
-    "gigazaur": Monster(name="Gigazaur", image="static/images/gigazaur.jpg"),
-    "mekadragon": Monster(name="Meka Dragon", image="static/images/mekadragon.jpg"),
-    "thekraken": Monster(name="The Kraken", image="static/images/thekraken.jpg"),
-    "cyberbunny": Monster(name="Cyber Bunny", image="static/images/cyberbunny.jpg"),
-    "alienoid": Monster(name="Alienoid", image="static/images/alienoid.jpg"),
-    "spacepenguin": Monster(name="Space Penguin", image="static/images/spacepenguin.jpg"),
+    "gigazaur": Monster(name="Gigazaur", image="images/monster1.png"),
+    "mekadragon": Monster(name="Meka Dragon", image="images/monster2.png"),
+    "thekraken": Monster(name="The Kraken", image="images/monster3.png"),
+    "cyberbunny": Monster(name="Cyber Bunny", image="images/monster4.png"),
+    "alienoid": Monster(name="Alienoid", image="images/monster5.png"),
+    "spacepenguin": Monster(name="Space Penguin", image="images/monster6.png"),
 }
+
+
+class Die:
+    def __init__(self, name, image):
+        self.name = name
+        self.image = image
+
+
+# Przykładowe kostki
+DICE = [
+    Die(name="1", image="images/dice1.png"),
+    Die(name="2", image="images/dice2.png"),
+    Die(name="3", image="images/dice3.png"),
+    Die(name="heart", image="images/dice_heart.png"),
+    Die(name="attack", image="images/dice_attack.png"),
+    Die(name="energy", image="images/dice_energy.png"),
+]
+
 
 class Card:
     def __init__(self, name, cost, effect, description):
