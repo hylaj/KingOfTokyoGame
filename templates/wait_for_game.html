@@ -1,21 +1,54 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
-    <h1>Waiting for other players to join</h1>
-    <p> Hello {{ current_player.nickname }}</p>
-    <h2>Game code: {{ game_code }}</h2>
-    <h2>Other players:</h2>
-<div id="players-list" hx-get="{% url 'get_players' %}" hx-trigger="load, every 3s" hx-swap="innerHTML">
-    <ul>
-        {% for player in players %}
-            <li>{{ player.nickname }} - {{ player.monster.name }}</li>
-        {% endfor %}
-    </ul>
-</div>
-    <p>Once all players will join, the game creator can start the game, by pressing "Start"</p>
 
- {% if current_player.id == players.0.id %}
-     <button><a href="{% url 'start_game' %}">Start</a></button>
- {% endif %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-6 text-center">
+            <h2 class="text-warning pb-4">KING OF TOKYO</h2>
+            <h5 class="text-center my-3">Waiting for players to join...</h5>
+        </div>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-4 p-5">
+            <img src="{% static current_player.monster.image %}" alt="Monsters" class="img-fluid">
+        </div>
+        <div class="col-4">
+            <div class="card bg-dark text-light border-0 mt-3">
+                <div class="card-body p-3">
+                <p class="text-center m-1 text-secondary">Game Code</p>
+                <div class="border border-secondary rounded m-0 pt-3 p-2">
+                    <h3 class="text-center fw-bold text-info">{{ game_code }}</h3>
+                </div>
+
+                    <h5 class="mt-5 mb-3 text-center">All Players:</h5>
+                    <div id="get_players" hx-get="{% url 'get_players' %}" hx-trigger="load, every 3s" hx-swap="innerHTML">
+                        <ul class="list-group-flush bg-dark border-secondary">
+                            {% for player in players %}
+                                <li class="py-2 list-group-item bg-dark text-light border-bottom border-secondary">
+                                    <img
+                                    src="{% static player.monster.image %}"
+                                    alt="{{ player.monster.name }}"
+                                    class="img-fluid me-3"
+                                    style="max-height: 30px; max-width: 30px">
+                                    <span class="fw-bold">{{ player.nickname }}
+                                    </span> - {{ player.monster.name }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <p class="mt-3 text-center text-info-emphasis">Once all players have joined, the game creator can start the game.</p>
+                    {% if current_player.id == players.0.id %}
+                        <div class="d-flex justify-content-center align-items-center">
+                            <a href="{% url 'start_game' %}" class="btn btn-primary btn-lg">Start</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {

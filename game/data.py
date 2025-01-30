@@ -31,7 +31,7 @@ class Game:
         self.deck = CARDS.copy()
         self.deck = CARDS.copy()  # Skopiowana lista kart dostępnych w grze
         self.available_cards = self.draw_initial_cards()  # Karty dostępne do kupienia
-        self.logs = []  # Lista do przechowywania logów akcj
+        self.logs = []  # Lista do przechowywania logów akcji
 
     def draw_initial_cards(self):
         # Wybiera np. 3 karty z talii na start gry
@@ -104,7 +104,7 @@ class Game:
         if winner:
             self.status = 'finished'
             self.winner = winner  # Przechowujemy zwycięzcę
-            self.add_log(f"Game ended")
+            self.add_log(f"Game over")
             return True
 
         # Sprawdź, czy został tylko jeden aktywny gracz
@@ -112,6 +112,7 @@ class Game:
         if len(active_players) == 1:
             self.status = 'finished'
             self.winner = active_players[0]
+            self.add_log(f"Game over")
             return True
 
         return False
@@ -132,7 +133,7 @@ class Player:
         self.monster = monster
         self.health = 3 #self.MAX_HEALTH
         self.victory = 0
-        self.energy = 10 #0
+        self.energy = 0
         self.in_tokyo = False
         self.is_active = True
         self.dice_result = []

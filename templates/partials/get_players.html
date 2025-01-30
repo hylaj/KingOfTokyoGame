@@ -1,0 +1,15 @@
+{% load static %}
+<ul class="list-group-flush bg-dark">
+                            {% for player in players %}
+                                <li class="py-2 list-group-item bg-dark text-light border-secondary border-bottom">
+                                    <img
+                                    src="{% static player.monster.image %}"
+                                    alt="{{ player.monster.name }}"
+                                    class="img-fluid  me-3"
+                                    style="max-height: 30px; max-width: 30px">
+                                    <span class="fw-bold">{{ player.nickname }}
+                                    </span> - {{ player.monster.name }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+

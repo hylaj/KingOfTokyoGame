@@ -1,17 +1,42 @@
 {% extends "base.html" %}
-
+{% load static %}
 {% block content %}
-    <h1>Join the game</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Join</button>
-    </form>
 
-    <h2>Gracze w grze:</h2>
-    <ul>
-        {% for player in game.players %}
-        <li>{{ player.nickname }} - {{ player.monster.name }}</li>
-        {% endfor %}
-    </ul>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-6 text-center">
+                <h2 class="text-warning pb-4">KING OF TOKYO</h2>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-4 p-5">
+                <img src="{% static 'images/monsters-join.png' %}" alt="" class="img-fluid">
+            </div>
+            <div class="col-4">
+                <div class="card bg-dark text-light border-0 mt-4">
+                    <div class="card-body p-3">
+                        <h3 class="text-start mb-4">Join the Game</h3>
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="{{ form.game_code.id_for_label }}" class="form-label">{{ form.game_code.label }}</label>
+                                {{ form.game_code }}
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.nickname.id_for_label }}" class="form-label">{{ form.nickname.label }}</label>
+                                {{ form.nickname }}
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.monster.id_for_label }}" class="form-label">{{ form.monster.label }}</label>
+                                {{ form.monster }}
+                            </div>
+                            <div class="d-flex justify-content-start">
+                                <button type="submit" class="btn btn-primary mt-2 px-5 ">Join</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock content %}

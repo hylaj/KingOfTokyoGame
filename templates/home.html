@@ -1,17 +1,53 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
-<div class="container mt-4">
-    <button class="btn btn-dark rounded-pill mb-3">
-        <a href="{% url 'create_game' %}" class="text-white text-decoration-none">Create New Game</a>
-    </button>
-    <button class="btn btn-dark btn-block rounded-pill mb-3">
-        <a href="{% url 'join_game' %}" class="text-white text-decoration-none">Join The Game</a>
-    </button>
-    <button class="btn btn-dark btn-block rounded-pill mb-3">
-        <a href="{% url 'rejoin_game' %}" class="text-white text-decoration-none">Rejoin Game</a>
-    </button>
-    <button class="btn btn-secondary btn-block rounded-pill mb-3">
-        <a href="{% url 'game_rules' %}" class="text-white text-decoration-none">Game Manual</a>
-    </button>
-</div>
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-6 text-center">
+                <h2 class="text-warning pb-4">KING OF TOKYO</h2>
+            </div>
+        </div>
+        <div class="row justify-content-center d-flex align-items-center">
+            <div class="col-4 p-5">
+                <img src="{% static 'images/monsters-start.png' %}" alt="" class="img-fluid">
+            </div>
+            <div class="col-4">
+                <div class="bg-dark text-light border-0 ">
+
+                        <h3 class="text-start mb-4 ">Let's play!</h3>
+                            <div class="list-group border border-secondary rounded w-75 ">
+
+                            <a href="{% url 'game_rules' %}"
+                               class="list-group-item list-group-item-action bg-dark text-light p-3">
+                                    Game Manual
+                            </a>
+
+                             <a href="{% url 'create_game' %}"
+                                class="list-group-item list-group-item-action bg-dark text-light p-3">
+                                    Create New Game
+                            </a>
+                             <a href="{% url 'join_game' %}"
+                                class="list-group-item list-group-item-action bg-dark text-light p-3 ">
+                                Join The Game
+                            </a>
+
+                             <a href="{% url 'rejoin_game' %}"
+                                class="list-group-item list-group-item-action bg-dark text-light p-3">
+                                    Rejoin Game
+                            </a>
+
+                        </div>
+
+                </div>
+            </div>
+
+        </div>
+    <div class="row justify-content-center d-flex align-items-center">
+        <div class="col-8 text-center">
+            <p class="fst-italic text-info">King of Tokyo is a game for 2 to 6 players where you play as mutant monsters, rampaging robots, or even abominable aliens battling in a fun,
+                chaotic atmosphere. Roll dice and choose your strategy: Will you attack your enemies? Heal your wounds? Escape from Tokyo? Stomp your path to victory!</p>
+        </div>
+    </div>
+    </div>
 {% endblock content %}

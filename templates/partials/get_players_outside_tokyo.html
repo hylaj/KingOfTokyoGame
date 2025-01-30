@@ -14,7 +14,7 @@
                 src="{% static player.monster.image %}"
                 alt="{{ player.monster.name }}"
                 class="img-fluid"
-                style="max-height: 80px;">
+                style="max-height: 80px;{% if not player.is_active %}filter: grayscale(100%);{% endif %}">
         </div>
 
         <!-- Sekcja z informacjami o graczu -->

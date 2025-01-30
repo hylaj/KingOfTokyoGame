@@ -10,7 +10,6 @@ from collections import Counter
 from django.utils.crypto import get_random_string
 def home(request):
     return render(request, 'home.html')
-
 def game_rules(request):
     return render(request, 'game_rules.html')
 
@@ -44,6 +43,7 @@ def create_form_join_game(request):
     form = JoinGameForm(request.POST or None)
     if request.method == "POST":
         if form.is_valid():
+
             game_code = form.cleaned_data["game_code"]
             nickname = form.cleaned_data["nickname"]
             monster_key = form.cleaned_data["monster"]
@@ -73,9 +73,11 @@ def create_form_join_game(request):
                 request.session["game_code"] = game.game_code
 
                 return redirect("wait_for_game")
+        else:
+            messages.error(request, "Invalid form data. Please check your input.")
 
     # Jeśli formularz nie jest poprawny lub wystąpił błąd, renderujemy stronę z błędami
-    return render(request, "join_game.html", {"form": form})
+    return render(request, "join_game.html", {"form": form, 'monsters': MONSTERS.items()})
 
 #Ponowne dołączanie do gry
 def rejoin_game(request):
@@ -153,7 +155,7 @@ def check_game_status(request):
 
 def get_players(request):
     game, player = get_game_and_player(request)
-    players_html = render_to_string("partials/players_list.html", {"players": game.players})
+    players_html = render_to_string("partials/get_players.html", {"players": game.players})
     return HttpResponse(players_html)
 
 
@@ -202,9 +204,8 @@ def gameplay(request):
         # Sprawdzamy, czy token jest zgodny z tym w sesji
         if submitted_token != request.session.get('form_token'):
             messages.warning(request, "Please do not refresh the page while playing your turn.")
-            return redirect('gameplay')
 
-        if 'roll_dice_btn' in request.POST:
+        elif 'roll_dice_btn' in request.POST:
             current_player.roll_player_dice()
             game.show_roll = False
             if current_player.roll_count == 3:
@@ -218,7 +219,7 @@ def gameplay(request):
                     return redirect("end_game")
 
 
-        if 'save_dice_btn' in request.POST:
+        elif 'save_dice_btn' in request.POST:
             selected_dice_names = request.POST.getlist("kept_dice", [])
             selected_dice = []
             for name in selected_dice_names:
@@ -234,7 +235,7 @@ def gameplay(request):
             result_counter=counter1-counter2
             current_player.displayed_dice=list(result_counter.elements())
 
-        if 'buy_card' in request.POST:
+        elif 'buy_card' in request.POST:
             card_id = int(request.POST.get('card_id'))
             card = game.available_cards[card_id]
             try:
@@ -290,7 +291,6 @@ def gameplay_view(request):
         return redirect('gameplay')
 
     return render(request, 'gameplay_view.html',{
-        "players": game.players,
         "game_code": game.game_code,
         "viewing_player": viewing_player,
         "current_player": current_player,
@@ -329,11 +329,11 @@ def get_tokyo_player(request):
 def get_players_outside_tokyo(request):
     game, viewing_player = get_game_and_player(request)
     current_player = game.get_current_player()
-    tokyo_player_html=render_to_string("partials/get_players_outside_tokyo.html", {
+    tokyo_players_html=render_to_string("partials/get_players_outside_tokyo.html", {
         "game": game,
         "current_player": current_player,
     })
-    return HttpResponse(tokyo_player_html)
+    return HttpResponse(tokyo_players_html)
 
 def leave_tokyo(request):
     try:
@@ -341,9 +341,8 @@ def leave_tokyo(request):
     except ObjectDoesNotExist as e:
         messages.error(request, str(e))
         return redirect("home")
-
 #gracz może opuścić Tokio po ataku przez innego gracza w trakcie tury innego gracza lub na początku własnej tury, przed rzutem kostkami
-    if viewing_player.was_attacked and viewing_player.roll_count == 0 and viewing_player != game.attacking_player:
+    if viewing_player.was_attacked and viewing_player.roll_count == 0 and game.attacking_player and viewing_player != game.attacking_player:
         viewing_player.in_tokyo = False
         game.attacking_player.in_tokyo = True
         game.tokyo_player = game.attacking_player
@@ -370,7 +369,8 @@ def eliminated_player_view(request):
         game.attacking_player.gain_victory(1)
         viewing_player.was_attacked = False
 
-
+    messages.error(request, "You have been eliminated! However, you can still follow the gameplay.")
+    game.add_log(f"{viewing_player.nickname} has been eliminated.")
     if game.check_end_game():
         return redirect("end_game")
 

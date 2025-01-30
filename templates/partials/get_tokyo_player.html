@@ -1,5 +1,6 @@
 {% load static %}
-{% if game.tokyo_player %}
+                <div class="row align-items-center m-2 p-1">
+                {% if game.tokyo_player %}
                    <div class="col-4 d-flex justify-content-center align-items-center p-2 me-4">
                         <img
                             src="{% static game.tokyo_player.monster.image %}"
@@ -12,7 +13,7 @@
                    <div class="col-6 text-start p-2">
                         <h5 class="fw-bold mb-1 {% if current_player == game.tokyo_player %} text-warning {% endif %}">{{ game.tokyo_player.nickname }}</h5>
                         <p class="mb-1 text-secondary">{{ game.tokyo_player.monster.name }}</p>
-                        <p class="mb-0" style="font-size: 1.3em;">
+                        <p class="mb-0 " style="font-size: 1.3em;">
                             <img
                                 src="{% static 'images/heart.png' %}"
                                 alt="health points"
@@ -34,3 +35,4 @@
                         </p>
                     </div>
                {% endif %}
+            </div>
