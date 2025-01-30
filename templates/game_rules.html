@@ -1,1 +1,127 @@
-GAME MANUAL
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="container py-3">
+    <div class="row justify-content-center">
+        <div class="col-10 text-center mb-3">
+            <h2 class="text-warning py-4">KING OF TOKYO</h2>
+            <p class="text-center text-secondary my-3 fst-italic">Na przerażonych mieszkańców Tokio padł blady strach. Grupa potworów walczy o dominację nad miastem. Bezradna armia nie jest w stanie czołgami i lotnictwem powstrzymać potworów siejących zniszczenie w mieście.
+                Wciel się w jednego z potworów i dołącz do walki. Atakuj inne potwory, lecz rany i gromadź energię, która pozwoli ci stać się jeszcze bardziej przerażającym monstrum. Istnieją dwie drogi do zwycięstwa: zniszczenie Tokio lub unicestwienie innych potworów.
+            <br><strong class="text-info">Którą drogą podążysz?</strong>
+            </p>
+        </div>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-10">
+            <div class="accordion t" id="accordionPanelsStayOpenExample">
+              <div class="accordion-item bg-dark text-light">
+                <h2 class="accordion-header">
+                  <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true" aria-controls="panelsStayOpen-collapseOne">
+                    Cel gry
+                  </button>
+                </h2>
+                <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show">
+                  <div class="accordion-body">
+                   Wygrywa gracz, który jako pierwszy zdobędzie 20 punktów lub gracz, który pozostanie jako jedyny w grze (pozostali gracze zostaną wyeliminowani).
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item bg-dark text-light">
+                <h2 class="accordion-header">
+                  <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="false" aria-controls="panelsStayOpen-collapseTwo">
+                    Przebieg gry
+                  </button>
+                </h2>
+                <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse">
+                  <div class="accordion-body">
+                    Kolejność rozgrywania tur przez graczy jest ustalana na podstawie kolejności dołączenia graczy do rozgrywki. Grę rozpoczyna gracz, który dołączył do niej jako pierwszy.
+                    <br>W swojej turze gracz rzuca kostkami i może w dowolnym momencie dokonać zakupu kart. <br> Gracz jest eliminowany, jeśli jego punkty życia <i class="bi bi-heart"></i> spadną do 0.
+                    Gracz kończy swoją turę, klikając 'End turn'. Turę rozpoczyna kolejny gracz.
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item bg-dark text-light">
+                <h2 class="accordion-header">
+                  <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseThree" aria-expanded="false" aria-controls="panelsStayOpen-collapseThree">
+                    Rzuty kostkami
+                  </button>
+                </h2>
+                <div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse">
+                  <div class="accordion-body">
+                    Gracz może wykonać maksymalnie 3 rzuty w swojej turze. Po każdym rzucie może (ale nie musi) odłożyć na bok dowolną liczbę kostek. Pozostałymi kostkami rzuca dalej. Wyniki rzutu kostkami są zapisywane, kiedy gracz odłoży na bok 6 kostek.
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item bg-dark text-light">
+                <h2 class="accordion-header">
+                  <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseFour" aria-expanded="false" aria-controls="panelsStayOpen-collapseFour">
+                    Działanie symboli na kostkach
+                  </button>
+                </h2>
+                <div id="panelsStayOpen-collapseFour" class="accordion-collapse collapse">
+                  <div class="accordion-body">
+                      <p>Do symboli na kostkach przypisane są różne działania.</p>
+
+                      <h5 class="text-info">Punkty zwycięstwa <i class="bi bi-star"></i></h5>
+<p>Aby zdobyć punkty zwycięstwa <i class="bi bi-star"></i>, gracz musi wyrzucić na kostkach 3 takie same cyfry (na przykład 111). Cyfra na kostce wskazuje liczbę punktów zwycięstwa <i class="bi bi-star"></i> zdobytych przez gracza. Na przykład kostki 222 dadzą graczowi 2 <i class="bi bi-star"></i> Każda kolejna kostka z tą samą cyfrą daje graczowi dodatkowo 1 punkt zwycięstwa <i class="bi bi-star"></i>.
+</p>
+                      <h5 class="text-info">Atak <img
+                                    src="{% static 'images/hit-info.png' %}"
+                                    alt="attack points"
+                                    style="height: 1.2em; width: 1.2em;"></h5>
+<p>Każdy symbol <img
+        src="{% static 'images/hit.png' %}"
+        alt="attack points"
+        style="height: 1.2em; width: 1.2em;">
+    zadaje 1 obrażenie innym graczom. Jeżeli gracz jest w Tokio – zadaje obrażenia wszystkim graczom znajdującym się poza Tokio. Jeżeli gracz jest poza Tokio – zadaje obrażenia graczowi znajdującemu się w Tokio. Każde otrzymane obrażenie oznacza utratę jednego punktu życia <i class="bi bi-heart"></i>. Gracz, któremu <i class="bi bi-heart"></i> spadnie do 0, zostaje wyeliminowany z gry. Pierwszy gracz, który na początku gry wyrzuci co najmniej jeden symbol <img
+        src="{% static 'images/hit.png' %}"
+        alt="attack points"
+        style="height: 1.2em; width: 1.2em;"> przemieszcza swój pionek do Tokio (nie zadając obrażeń).
+</p>
+                      <h5 class="text-info">Leczenie <i class="bi bi-heart"></i></h5>
+                      <p>
+Każdy symbol <i class="bi bi-heart"></i> pozwala odzyskać jeden utracony punkt życia <i class="bi bi-heart"></i>. Gracz może mieć maksymalnie 10 <i class="bi bi-heart"></i>. Uwaga! Gracz będący w Tokio nie może wykorzystywać symboli <i class="bi bi-heart"></i> do leczenia swoich obrażeń.
+                      </p>
+                      <h5 class="text-info">Energia <i class="bi bi-lightning-charge"></i></h5>
+                      <p>
+Każdy symbol (energia) dostarcza jednego punkt energii <i class="bi bi-lightning-charge"></i>.
+Gracze mogą kupować karty za wskazaną kwotę <i class="bi bi-lightning-charge"></i>
+                      </p>
+
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item bg-dark text-light">
+                <h2 class="accordion-header">
+                  <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseFive" aria-expanded="false" aria-controls="panelsStayOpen-collapseFive">
+                    Tokio
+                  </button>
+                </h2>
+                <div id="panelsStayOpen-collapseFive" class="accordion-collapse collapse">
+                  <div class="accordion-body">
+<ul>
+    <li>Na początku gry Tokio jest puste.</li>
+    <li>Gdy Tokio jest puste, gracz, który wyrzuci przynajmniej jeden symbol <img
+        src="{% static 'images/hit.png' %}"
+        alt="attack points"
+        style="height: 1.2em; width: 1.2em;">, przenosi swój pionek do Tokio, ale nie zadaje wtedy obrażeń.</li>
+    <li>W tym samym momencie tylko jeden gracz może być w Tokio.</li>
+    <li>Jeżeli gracz w Tokio zostanie zaatakowany, może (ale nie musi) opuścić Tokio. Klika wtedy 'Opuść Tokio'. Jego miejsce zajmuje gracz, który go zaatakował.</li>
+    <li>Gracz może opuścić Tokio podczas tury innych graczy bądź na początku swojej tury, przed rzutem kostkami.</li>
+    <li>Za każdym razem, gdy gracz wchodzi do Tokio, zdobywa 1 punkt <i class="bi bi-star"></i>.</li>
+    <li>Za każdą turę spędzoną w Tokio gracz zdobywa 2 punkty <i class="bi bi-star"></i>.</li>
+    <li>Gracz, który jest w Tokio, nie może leczyć swoich obrażeń (podnosić punkty <i class="bi bi-heart"></i>).</li>
+    <li>Gracz w Tokio zadaje obrażenia wszystkim graczom, którzy są poza Tokio.</li>
+    <li>Gracze poza Tokio zadają obrażenia tylko graczowi w Tokio.</li>
+</ul>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

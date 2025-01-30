@@ -1,9 +1,114 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
-    <h1>Game over</h1>
-    <h2>Winner: {{ game.winner.nickname }} - {{ game.winner.monster.name }}</h2>
 
-    <a href="{% url 'home' %}">Play again!</a>
+<div class="container py-5">
+    <div class="row justify-content-center d-flex align-items-center">
+        <div class="col-6 text-center">
+            <h2 class="text-warning pb-4">KING OF TOKYO</h2>
+            <a href="{% url 'home' %}" class="btn btn-outline-primary">Play again!</a>
+        </div>
+    </div>
+    <div class="row justify-content-center align-items-center my-3">
+        <div class="col-3 p-3 ">
+            <img src="{% static game.winner.monster.image %}" alt="Monsters" class="img-fluid w-75">
+        </div>
+        <div class="col-3">
+            <div class="card bg-dark text-light border-0 mt-3">
+                <div class="card-body p-3 text-center">
+                    <h1 class="text-danger mb-4">Game over</h1>
+                    <h4 class="my-3 text-light ">The winner is:</h4>
+                    <div class="col text-center p-2">
+                        <h1 class="fw-bold mb-1">{{ game.winner.nickname }}</h1>
+                        <p class="mb-1 text-secondary">{{ game.winner.monster.name }}</p>
+                        <p class="mb-0">
+                            <img
+                                src="{% static 'images/heart.png' %}"
+                                alt="health points"
+                                class="me-1"
+                                style="height: 20px; width: 20px;">
+                            {{ game.winner.health }}
+                            <img
+                                src="{% static 'images/victory.png' %}"
+                                alt="victory points"
+                                class="ms-3 me-1"
+                                style="height: 20px; width: 20px;">
+                            {{ game.winner.victory }}
+                            <img
+                                src="{% static 'images/energy.png' %}"
+                                alt="energy points"
+                                class="ms-3 me-1"
+                                style="height: 20px; width: 20px;">
+                            {{ game.winner.energy }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<div class="row justify-content-center d-flex align-items-center">
+    <div class="col-6 p-2 border-start border-secondary">
+                <h2 class="text-start text-secondary mb-3 ms-4 ">Individual results</h2>
+                {% for player in game.players %}
+
+                <div class="row align-items-center border rounded mb-3 ms-4 me-4 p-1 border-secondary">
+
+                    <!-- Sekcja z obrazem potwora -->
+                    <div class="col-4 d-flex justify-content-center align-items-center p-2 rounded-start">
+                        <img
+                            src="{% static player.monster.image %}"
+                            alt="{{ player.monster.name }}"
+                            class="img-fluid"
+                            style="max-height: 80px; {% if not player.is_active %}filter: grayscale(100%);{% endif %}">
+                    </div>
+
+                    <!-- Sekcja z informacjami o graczu -->
+                    <div class="col-6 text-start p-2">
+                        <h5 class="fw-bold mb-1">{{ player.nickname }}</h5>
+                        <p class="mb-1 text-secondary">{{ player.monster.name }}</p>
+                        <p class="mb-0">
+                            <img
+                                src="{% static 'images/heart.png' %}"
+                                alt="health points"
+                                class="me-1"
+                                style="height: 20px; width: 20px;">
+                            {{ player.health }}
+                            <img
+                                src="{% static 'images/victory.png' %}"
+                                alt="victory points"
+                                class="ms-3 me-1"
+                                style="height: 20px; width: 20px;">
+                            {{ player.victory }}
+                            <img
+                                src="{% static 'images/energy.png' %}"
+                                alt="energy points"
+                                class="ms-3 me-1"
+                                style="height: 20px; width: 20px;">
+                            {{ player.energy }}
+                        </p>
+                    </div>
+                </div>
+
+                {% endfor %}
+
+        </div>
+</div>
+</div>
 
 
-{% endblock content %}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const checkGameStatus = function() {
+                fetch("{% url 'check_game_status'%}")
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === "playing") {
+                            window.location.href = "{% url 'gameplay_view' %}";
+                        }
+                    });
+            };
+
+            setInterval(checkGameStatus, 2000);  // Sprawdzanie statusu co 3 sekundy
+        });
+    </script>
+{% endblock %}
